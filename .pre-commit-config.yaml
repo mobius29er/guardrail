@@ -1,0 +1,39 @@
+# Install once, then leaks are caught before they ever reach the remote:
+#
+#     pip install pre-commit && pre-commit install
+#
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: detect-private-key
+      - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
+      - id: check-added-large-files
+        args: [--maxkb=2048]
+      - id: check-yaml
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: guardrail-validate
+        name: validate guardrail suites
+        entry: python -m guardrail.cli validate --suite suites/
+        language: system
+        files: ^suites/.*\.ya?ml$
+        pass_filenames: false

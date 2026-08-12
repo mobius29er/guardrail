@@ -1,0 +1,27 @@
+title = "Guardrail gitleaks config"
+
+# Start from the maintained upstream ruleset, then narrow the allowlist.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented placeholders and test fixtures — never real credentials."
+
+paths = [
+  # The committed example env file contains only empty assignments.
+  '''^\.env\.example$''',
+  # Redaction tests contain deliberately key-shaped synthetic strings.
+  '''^tests/test_redaction\.py$''',
+  # The redaction patterns themselves look like the things they match.
+  '''^src/guardrail/report\.py$''',
+]
+
+regexes = [
+  # Placeholder values used throughout the docs.
+  '''YOUR_[A-Z_]*KEY''',
+  '''your-[a-z-]*key''',
+  '''sk-ant-xxx''',
+  '''<your[- ]key>''',
+  # Repeated-character synthetic keys from the test fixtures.
+  '''(?i)(sk-ant-api03-|sk-proj-|AIza|ghp_|AKIA)([A-Z])\2{15,}''',
+]

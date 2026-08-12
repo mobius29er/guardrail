@@ -1,0 +1,99 @@
+# ---------------------------------------------------------------------------
+# Credentials — NEVER commit these.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.env
+secrets.*
+credentials.*
+*.pem
+*.key
+*.p12
+*.pfx
+*_rsa
+*_dsa
+*_ed25519
+id_rsa*
+.netrc
+.htpasswd
+service-account*.json
+gcloud-*.json
+*-credentials.json
+*.credentials
+.aws/
+.azure/
+.gcloud/
+auth.json
+token.json
+*.token
+
+# Provider-specific config that commonly holds keys
+.anthropic/
+.openai/
+.ollama/
+
+# ---------------------------------------------------------------------------
+# Guardrail run output (may contain full model responses / prompt text)
+# ---------------------------------------------------------------------------
+results/
+runs/
+*.run.json
+report.html
+report.md
+!docs/**/report.md
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib60/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# Testing / tooling
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+
+# ---------------------------------------------------------------------------
+# Editors / OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
