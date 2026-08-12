@@ -77,15 +77,21 @@ async def run_case(
             )
             continue
 
+        # `turn: swept` follows the swept turn to wherever it landed in this
+        # positional variant. On a non-sweep case it degrades to the last turn.
+        turn_index = check.turn
+        if check.follows_swept_turn:
+            turn_index = case.sweep_position if case.sweep_position is not None else -1
+
         try:
-            target = assistant_turns[check.turn]
+            target = assistant_turns[turn_index]
         except IndexError:
             check_results.append(
                 CheckResult(
                     kind=check.kind,
                     outcome=Outcome.ERROR,
                     reason=(
-                        f"check targets turn {check.turn} but the case produced "
+                        f"check targets turn {turn_index} but the case produced "
                         f"{len(assistant_turns)} assistant turn(s)"
                     ),
                     description=check.description,
@@ -125,12 +131,17 @@ async def run_suites(
     filter_id: str | None = None,
     repeat: int = 1,
     flake_threshold: float = 0.0,
+    sweep: bool = False,
 ) -> RunResult:
     """Run every case in ``suites`` against ``target``, bounded by concurrency.
 
     ``repeat`` executes each case that many times and grades it across the
     whole set. Repeats of the same case run concurrently alongside everything
     else — the semaphore bounds total in-flight requests, not cases.
+
+    ``sweep`` expands cases declaring ``sweep_turn`` into one variant per
+    position. It is off by default because it multiplies API cost by the number
+    of positions; without it a sweep case runs once in its authored order.
     """
     if repeat < 1:
         raise ValueError("repeat must be >= 1")
@@ -144,7 +155,7 @@ async def run_suites(
                 continue
             if filter_id and filter_id not in case.id:
                 continue
-            cases.append(case)
+            cases.extend(case.expand_sweep() if sweep else [case])
 
     provider = build_provider(target.provider)
     judge = build_provider(target.judge) if target.judge else None
@@ -179,4 +190,5 @@ async def run_suites(
         started_at=started_at,
         duration_s=round(time.monotonic() - wall_start, 2),
         repeat=repeat,
+        sweep=sweep,
     )

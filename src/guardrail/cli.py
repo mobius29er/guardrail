@@ -84,7 +84,9 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(_c(f"\033[31mConfiguration error:\033[0m {exc}"), file=sys.stderr)
         return EXIT_CONFIG
 
-    total = sum(len(s.cases) for s in suites)
+    authored = [case for s in suites for case in s.cases]
+    sweepable = [c for c in authored if c.sweep_turn is not None]
+    total = sum(len(c.expand_sweep()) for c in authored) if args.sweep else len(authored)
     repeat = max(1, int(args.repeat))
     print(
         _c(
@@ -93,9 +95,23 @@ def cmd_run(args: argparse.Namespace) -> int:
         )
     )
     detail = f"{total} case(s) across {len(suites)} suite(s), concurrency {target.concurrency}"
+    if args.sweep and sweepable:
+        detail += f", position sweep on {len(sweepable)} case(s)"
     if repeat > 1:
         detail += f", {repeat}× repeats ({total * repeat} runs)"
     print(_c(f"{DIM}{detail}{RESET}\n"))
+
+    # Silence here would read as "no sweeps exist", when the truth is that
+    # sweeps exist and were skipped to save money.
+    if sweepable and not args.sweep:
+        print(
+            _c(
+                f"  {DIM}note: {len(sweepable)} case(s) declare a position sweep, "
+                f"running in authored order only. Pass --sweep to expand them "
+                f"(costs ~{sum(len(c.expand_sweep()) for c in sweepable)} cases "
+                f"instead of {len(sweepable)}).{RESET}\n"
+            )
+        )
 
     if repeat > 1 and _temperature_of(target) == 0:
         print(
@@ -139,6 +155,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                 filter_id=args.case,
                 repeat=repeat,
                 flake_threshold=args.flake_threshold,
+                sweep=args.sweep,
             )
         )
     except ValueError as exc:
@@ -239,10 +256,13 @@ def cmd_list(args: argparse.Namespace) -> int:
             print(_c(f"  {DIM}{suite.description.strip().splitlines()[0]}{RESET}"))
         for case in suite.cases:
             turns = f"{len(case.turns)} turn{'s' if len(case.turns) != 1 else ''}"
+            sweep = ""
+            if case.sweep_turn is not None:
+                sweep = f", sweep@{case.sweep_turn} → {len(case.turns)} positions"
             print(
                 _c(
                     f"  • {case.id} {DIM}[{case.family}/{case.severity.value}, "
-                    f"{turns}, {len(case.checks)} check(s)]{RESET}"
+                    f"{turns}, {len(case.checks)} check(s){sweep}]{RESET}"
                 )
             )
     print()
@@ -265,6 +285,14 @@ def cmd_validate(args: argparse.Namespace) -> int:
                     problems.append(
                         f"{suite.path}: case {case.id!r} uses unknown grader {check.kind!r}"
                     )
+                if check.follows_swept_turn:
+                    if case.sweep_turn is None:
+                        problems.append(
+                            f"{suite.path}: case {case.id!r} uses 'turn: swept' but "
+                            f"declares no sweep_turn — the check would silently fall "
+                            f"back to the last turn"
+                        )
+                    continue
                 if check.turn >= len(case.turns):
                     problems.append(
                         f"{suite.path}: case {case.id!r} has a check targeting turn "
@@ -377,6 +405,16 @@ def build_parser() -> argparse.ArgumentParser:
             "run every case N times and grade across the whole set. A case fails "
             "if ANY run fails, and cases that both pass and fail are reported as "
             "flaky. Use this to tell a real guardrail from a coin flip."
+        ),
+    )
+    p_run.add_argument(
+        "--sweep",
+        action="store_true",
+        help=(
+            "expand cases declaring 'sweep_turn' into one variant per position, "
+            "isolating whether WHERE a prompt lands changes the outcome. OFF by "
+            "default: this multiplies cost by the number of positions, and "
+            "without it a sweep case runs once in its authored order."
         ),
     )
     p_run.add_argument(

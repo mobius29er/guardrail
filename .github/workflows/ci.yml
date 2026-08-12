@@ -22,11 +22,28 @@ jobs:
         with:
           fetch-depth: 0 # full history — a key committed and reverted is still leaked
 
-      - name: gitleaks
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_CONFIG: .gitleaks.toml
+      # Run the binary directly rather than gitleaks-action. The action wraps
+      # the same command but adds a licence check and an artifact upload that
+      # crashes with a confusing "results.sarif does not exist" whenever the
+      # scan itself fails — burying the real error. Invoking gitleaks directly
+      # surfaces config errors and findings plainly.
+      - name: Install gitleaks
+        run: |
+          VERSION=8.24.3
+          curl -sSfL -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo mv /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      # gitleaks uses Go's RE2 engine, which rejects backreferences and
+      # lookaround. An invalid pattern panics at config load, so validate the
+      # config on its own before trusting a clean scan result.
+      - name: Validate gitleaks config
+        run: gitleaks detect --config .gitleaks.toml --no-git --source .github --redact -v
+
+      - name: Scan full history
+        run: gitleaks detect --config .gitleaks.toml --redact -v --log-opts="--all"
 
   test:
     name: Test (py${{ matrix.python }})
@@ -51,6 +68,10 @@ jobs:
       - name: Format check
         run: ruff format --check src tests
 
+      # Deliberately the bare console script, not `python -m pytest`. The
+      # latter puts CWD on sys.path and hides import errors that only appear
+      # here — which is exactly how a broken cross-test import shipped green
+      # locally and red in CI.
       - name: Unit tests
         run: pytest -q
 
