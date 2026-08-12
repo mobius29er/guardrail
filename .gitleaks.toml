@@ -16,12 +16,17 @@ paths = [
   '''^src/guardrail/report\.py$''',
 ]
 
+# NOTE: gitleaks compiles these with Go's RE2 engine, which does NOT support
+# backreferences, lookahead, or lookbehind. A pattern using them does not fail
+# gracefully — gitleaks panics on config load and the whole job dies. Keep every
+# regex here RE2-compatible.
 regexes = [
   # Placeholder values used throughout the docs.
   '''YOUR_[A-Z_]*KEY''',
   '''your-[a-z-]*key''',
   '''sk-ant-xxx''',
   '''<your[- ]key>''',
-  # Repeated-character synthetic keys from the test fixtures.
-  '''(?i)(sk-ant-api03-|sk-proj-|AIza|ghp_|AKIA)([A-Z])\2{15,}''',
+  # Synthetic keys in the redaction fixtures are long runs of one character.
+  # Expressed without a backreference so RE2 can compile it.
+  '''(?i)(sk-ant-api03-|sk-proj-|AIza|ghp_|AKIA)(A{15,}|B{15,}|C{15,}|D{15,}|E{15,}|F{15,}|G{15,}|Q{15,}|Z{15,})''',
 ]

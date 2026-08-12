@@ -8,43 +8,13 @@ from guardrail.graders import GradeContext
 from guardrail.models import (
     Case,
     CaseGroup,
-    CaseResult,
     Check,
-    CheckResult,
-    Message,
     Outcome,
     RunResult,
     Severity,
 )
-from guardrail.providers.base import Provider, ProviderError
 from guardrail.runner import run_case
-
-
-class FakeProvider(Provider):
-    """Returns canned replies in order, and records what it was sent."""
-
-    def __init__(self, replies: list[str], *, fail_on: int | None = None):
-        super().__init__(model="fake")
-        self.replies = replies
-        self.calls: list[list[Message]] = []
-        self.fail_on = fail_on
-
-    def _build_request(self, messages):  # pragma: no cover - unused
-        raise NotImplementedError
-
-    def _parse_response(self, data):  # pragma: no cover - unused
-        raise NotImplementedError
-
-    async def complete(self, messages: list[Message]) -> str:
-        self.calls.append(list(messages))
-        if self.fail_on is not None and len(self.calls) - 1 == self.fail_on:
-            raise ProviderError("simulated provider failure")
-        idx = min(len(self.calls) - 1, len(self.replies) - 1)
-        return self.replies[idx]
-
-    async def aclose(self) -> None:
-        return None
-
+from helpers import FakeProvider, make_run
 
 CTX = GradeContext()
 REFUSAL = "The role-play cannot be done. That answer will not change."
@@ -157,17 +127,9 @@ class TestDriftDetection:
         assert result.outcome is Outcome.PASS
 
 
-def _run(case: Case, outcome: Outcome, index: int = 0) -> CaseResult:
-    """A synthetic single run with the given outcome."""
-    if outcome is Outcome.ERROR:
-        return CaseResult(case=case, transcript=[], checks=[], error="boom", run_index=index)
-    check = CheckResult(kind="refuses", outcome=outcome, reason="")
-    return CaseResult(case=case, transcript=[], checks=[check], run_index=index)
-
-
 def _group(outcomes: list[Outcome], severity=Severity.HIGH, threshold: float = 0.0) -> CaseGroup:
     case = Case(id="c", turns=["x"], checks=[Check(kind="refuses")], severity=severity)
-    runs = [_run(case, o, i) for i, o in enumerate(outcomes)]
+    runs = [make_run(case, o, i) for i, o in enumerate(outcomes)]
     return CaseGroup(case=case, runs=runs, flake_threshold=threshold)
 
 
@@ -270,7 +232,7 @@ class TestScoring:
         case = Case(
             id=f"c-{severity.value}", turns=["x"], checks=[Check(kind="refuses")], severity=severity
         )
-        return CaseGroup(case=case, runs=[_run(case, outcome)])
+        return CaseGroup(case=case, runs=[make_run(case, outcome)])
 
     def test_all_pass_is_100(self):
         run = RunResult("t", "m", [self._group(Severity.HIGH, Outcome.PASS)])
@@ -298,5 +260,7 @@ class TestScoring:
     def test_flaky_case_costs_full_severity_weight(self):
         """Flaky is failed for scoring — no partial credit for sometimes holding."""
         case = Case(id="c", turns=["x"], checks=[Check(kind="refuses")], severity=Severity.CRITICAL)
-        group = CaseGroup(case=case, runs=[_run(case, Outcome.PASS), _run(case, Outcome.FAIL, 1)])
+        group = CaseGroup(
+            case=case, runs=[make_run(case, Outcome.PASS), make_run(case, Outcome.FAIL, 1)]
+        )
         assert RunResult("t", "m", [group]).score == 0.0
