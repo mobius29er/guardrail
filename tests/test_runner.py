@@ -5,7 +5,17 @@ from __future__ import annotations
 import pytest
 
 from guardrail.graders import GradeContext
-from guardrail.models import Case, Check, Message, Outcome, RunResult, Severity
+from guardrail.models import (
+    Case,
+    CaseGroup,
+    CaseResult,
+    Check,
+    CheckResult,
+    Message,
+    Outcome,
+    RunResult,
+    Severity,
+)
 from guardrail.providers.base import Provider, ProviderError
 from guardrail.runner import run_case
 
@@ -147,18 +157,123 @@ class TestDriftDetection:
         assert result.outcome is Outcome.PASS
 
 
-class TestScoring:
-    def _result(self, severity: Severity, outcome: Outcome):
-        from guardrail.models import CaseResult, CheckResult
+def _run(case: Case, outcome: Outcome, index: int = 0) -> CaseResult:
+    """A synthetic single run with the given outcome."""
+    if outcome is Outcome.ERROR:
+        return CaseResult(case=case, transcript=[], checks=[], error="boom", run_index=index)
+    check = CheckResult(kind="refuses", outcome=outcome, reason="")
+    return CaseResult(case=case, transcript=[], checks=[check], run_index=index)
 
+
+def _group(outcomes: list[Outcome], severity=Severity.HIGH, threshold: float = 0.0) -> CaseGroup:
+    case = Case(id="c", turns=["x"], checks=[Check(kind="refuses")], severity=severity)
+    runs = [_run(case, o, i) for i, o in enumerate(outcomes)]
+    return CaseGroup(case=case, runs=runs, flake_threshold=threshold)
+
+
+class TestCaseGroup:
+    def test_single_run_behaves_like_the_run(self):
+        assert _group([Outcome.PASS]).outcome is Outcome.PASS
+        assert _group([Outcome.FAIL]).outcome is Outcome.FAIL
+
+    def test_any_failure_fails_the_case(self):
+        """Nine passes and one failure is a failure — that is the whole point."""
+        group = _group([Outcome.PASS] * 9 + [Outcome.FAIL])
+        assert group.outcome is Outcome.FAIL
+        assert group.flake_rate == pytest.approx(0.1)
+
+    def test_flaky_detection(self):
+        group = _group([Outcome.PASS, Outcome.FAIL, Outcome.PASS, Outcome.FAIL])
+        assert group.is_flaky
+        assert group.flake_rate == 0.5
+
+    def test_all_pass_is_not_flaky(self):
+        assert not _group([Outcome.PASS] * 5).is_flaky
+
+    def test_all_fail_is_not_flaky(self):
+        """Consistently broken is a different problem from intermittent."""
+        group = _group([Outcome.FAIL] * 5)
+        assert not group.is_flaky
+        assert group.flake_rate == 1.0
+        assert group.outcome is Outcome.FAIL
+
+    def test_errors_do_not_mask_a_pass(self):
+        """A network blip mid-run must not be reported as a guardrail failure."""
+        group = _group([Outcome.PASS, Outcome.ERROR, Outcome.PASS])
+        assert group.outcome is Outcome.PASS
+        assert len(group.errors) == 1
+        assert len(group.graded) == 2
+
+    def test_errors_do_not_dilute_the_flake_rate(self):
+        group = _group([Outcome.PASS, Outcome.ERROR, Outcome.FAIL])
+        assert group.flake_rate == 0.5  # 1 failure of 2 graded, not of 3 runs
+
+    def test_all_errored_is_an_error(self):
+        assert _group([Outcome.ERROR] * 3).outcome is Outcome.ERROR
+
+    def test_threshold_tolerates_rare_failures(self):
+        group = _group([Outcome.PASS] * 9 + [Outcome.FAIL], threshold=0.1)
+        assert group.outcome is Outcome.PASS
+        assert group.is_flaky  # still reported, just not fatal
+
+    def test_threshold_still_fails_above_it(self):
+        group = _group([Outcome.PASS] * 8 + [Outcome.FAIL] * 2, threshold=0.1)
+        assert group.outcome is Outcome.FAIL
+
+    def test_representative_prefers_a_failure(self):
+        group = _group([Outcome.PASS, Outcome.FAIL, Outcome.PASS])
+        rep = group.representative
+        assert rep is not None and rep.outcome is Outcome.FAIL
+
+    def test_representative_when_all_pass(self):
+        rep = _group([Outcome.PASS, Outcome.PASS]).representative
+        assert rep is not None and rep.outcome is Outcome.PASS
+
+
+class TestRepeatIntegration:
+    async def test_repeat_runs_the_case_n_times(self):
+        case = Case(id="c", turns=["a"], checks=[Check(kind="refuses")])
+        provider = FakeProvider([REFUSAL])
+        runs = [await run_case(case, provider, CTX, run_index=i) for i in range(5)]
+        group = CaseGroup(case=case, runs=runs)
+
+        assert len(provider.calls) == 5
+        assert group.outcome is Outcome.PASS
+        assert [r.run_index for r in runs] == [0, 1, 2, 3, 4]
+
+    async def test_intermittent_drift_is_caught(self):
+        """A guardrail that moves 1 time in 4 must not report as a clean pass."""
+        case = Case(
+            id="drift",
+            turns=["flip roles"],
+            checks=[Check(kind="refuses")],
+            severity=Severity.CRITICAL,
+        )
+        outcomes = [REFUSAL, REFUSAL, DRIFT, REFUSAL]
+        runs = [
+            await run_case(case, FakeProvider([reply]), CTX, run_index=i)
+            for i, reply in enumerate(outcomes)
+        ]
+        group = CaseGroup(case=case, runs=runs)
+
+        assert group.outcome is Outcome.FAIL
+        assert group.is_flaky
+        assert group.flake_rate == 0.25
+
+        run = RunResult("t", "m", [group], repeat=4)
+        assert run.has_critical_failure()
+        assert len(run.flaky) == 1
+
+
+class TestScoring:
+    def _group(self, severity: Severity, outcome: Outcome) -> CaseGroup:
         case = Case(
             id=f"c-{severity.value}", turns=["x"], checks=[Check(kind="refuses")], severity=severity
         )
-        check = CheckResult(kind="refuses", outcome=outcome, reason="")
-        return CaseResult(case=case, transcript=[], checks=[check])
+        return CaseGroup(case=case, runs=[_run(case, outcome)])
 
     def test_all_pass_is_100(self):
-        run = RunResult("t", "m", [self._result(Severity.HIGH, Outcome.PASS)])
+        run = RunResult("t", "m", [self._group(Severity.HIGH, Outcome.PASS)])
         assert run.score == 100.0
 
     def test_severity_is_weighted(self):
@@ -167,15 +282,21 @@ class TestScoring:
             "t",
             "m",
             [
-                self._result(Severity.CRITICAL, Outcome.FAIL),
-                self._result(Severity.LOW, Outcome.PASS),
+                self._group(Severity.CRITICAL, Outcome.FAIL),
+                self._group(Severity.LOW, Outcome.PASS),
             ],
         )
         assert run.score == pytest.approx(11.1, abs=0.2)  # 1 of 9 weight
 
     def test_critical_failure_flagged(self):
-        run = RunResult("t", "m", [self._result(Severity.CRITICAL, Outcome.FAIL)])
+        run = RunResult("t", "m", [self._group(Severity.CRITICAL, Outcome.FAIL)])
         assert run.has_critical_failure()
 
     def test_no_gradable_cases_scores_zero(self):
         assert RunResult("t", "m", []).score == 0.0
+
+    def test_flaky_case_costs_full_severity_weight(self):
+        """Flaky is failed for scoring — no partial credit for sometimes holding."""
+        case = Case(id="c", turns=["x"], checks=[Check(kind="refuses")], severity=Severity.CRITICAL)
+        group = CaseGroup(case=case, runs=[_run(case, Outcome.PASS), _run(case, Outcome.FAIL, 1)])
+        assert RunResult("t", "m", [group]).score == 0.0

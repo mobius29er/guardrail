@@ -84,40 +84,58 @@ def to_dict(run: RunResult, *, include_transcripts: bool = True) -> dict[str, An
         "started_at": run.started_at,
         "duration_s": run.duration_s,
         "score": run.score,
+        "repeat": run.repeat,
         "summary": {
             "total": len(run.results),
             "passed": len(run.passed),
             "failed": len(run.failed),
             "errored": len(run.errored),
+            "flaky": len(run.flaky),
             "critical_failure": run.has_critical_failure(),
         },
         "cases": [],
     }
 
-    for result in run.results:
+    for group in run.results:
         entry: dict[str, Any] = {
-            "id": result.case.id,
-            "family": result.case.family,
-            "severity": result.case.severity.value,
-            "description": result.case.description,
-            "outcome": result.outcome.value,
-            "latency_s": result.latency_s,
-            "checks": [
-                {
-                    "kind": c.kind,
-                    "outcome": c.outcome.value,
-                    "reason": c.reason,
-                    "description": c.description,
-                }
-                for c in result.checks
-            ],
+            "id": group.case.id,
+            "family": group.case.family,
+            "severity": group.case.severity.value,
+            "description": group.case.description,
+            "outcome": group.outcome.value,
+            "latency_s": group.latency_s,
+            "repeat": len(group.runs),
+            "flake_rate": round(group.flake_rate, 3),
+            "is_flaky": group.is_flaky,
+            "runs_failed": len(group.failures),
+            "runs_graded": len(group.graded),
+            "runs_errored": len(group.errors),
+            "runs": [],
         }
-        if result.error:
-            entry["error"] = result.error
-        if include_transcripts:
-            entry["transcript"] = [
-                {"role": m.role, "content": m.content} for m in result.transcript
-            ]
+
+        for result in group.runs:
+            run_entry: dict[str, Any] = {
+                "run_index": result.run_index,
+                "outcome": result.outcome.value,
+                "latency_s": result.latency_s,
+                "checks": [
+                    {
+                        "kind": c.kind,
+                        "outcome": c.outcome.value,
+                        "reason": c.reason,
+                        "description": c.description,
+                    }
+                    for c in result.checks
+                ],
+            }
+            if result.error:
+                run_entry["error"] = result.error
+            if include_transcripts:
+                run_entry["transcript"] = [
+                    {"role": m.role, "content": m.content} for m in result.transcript
+                ]
+            entry["runs"].append(run_entry)
+
         payload["cases"].append(entry)
 
     return _redact_tree(payload)
@@ -156,21 +174,34 @@ def to_markdown(run: RunResult) -> str:
         "",
     ]
 
+    if run.repeat > 1:
+        lines[-1:] = [
+            f"- **Repeats:** {run.repeat}× per case — a case fails if *any* run fails",
+            "",
+        ]
+
     if run.has_critical_failure():
         lines += [
             "> ⛔ **CRITICAL FAILURE** — at least one critical-severity case did not pass.",
             "",
         ]
 
+    if run.flaky:
+        lines += [
+            f"> 🎲 **{len(run.flaky)} FLAKY** — these cases both passed and failed "
+            "across repeats. An intermittent guardrail is not a guardrail.",
+            "",
+        ]
+
     by_family: dict[str, list[Any]] = {}
-    for result in run.results:
-        by_family.setdefault(result.case.family, []).append(result)
+    for group in run.results:
+        by_family.setdefault(group.case.family, []).append(group)
 
     lines += [
         "## Summary by family",
         "",
-        "| Family | Passed | Failed | Errored |",
-        "|---|---:|---:|---:|",
+        "| Family | Passed | Failed | Errored | Flaky |",
+        "|---|---:|---:|---:|---:|",
     ]
     for family in sorted(by_family):
         rows = by_family[family]
@@ -178,20 +209,45 @@ def to_markdown(run: RunResult) -> str:
             f"| `{family}` "
             f"| {sum(1 for r in rows if r.outcome is Outcome.PASS)} "
             f"| {sum(1 for r in rows if r.outcome is Outcome.FAIL)} "
-            f"| {sum(1 for r in rows if r.outcome is Outcome.ERROR)} |"
+            f"| {sum(1 for r in rows if r.outcome is Outcome.ERROR)} "
+            f"| {sum(1 for r in rows if r.is_flaky)} |"
         )
     lines.append("")
+
+    if run.flaky:
+        lines += [
+            "## Flaky cases",
+            "",
+            "Ranked by how often the guardrail moved. These are the most important "
+            "rows in the report: a case that fails 3 times in 10 looks like a clean "
+            "pass or a clean fail depending on which single run you happened to see.",
+            "",
+            "| Case | Severity | Failed | Rate |",
+            "|---|---|---:|---:|",
+        ]
+        for group in sorted(run.flaky, key=lambda g: -g.flake_rate):
+            lines.append(
+                f"| `{group.case.id}` | {group.case.severity.value} "
+                f"| {len(group.failures)}/{len(group.graded)} "
+                f"| {group.flake_rate:.0%} |"
+            )
+        lines.append("")
 
     failures = run.failed + run.errored
     if failures:
         lines += ["## Failures", ""]
-        for result in sorted(failures, key=lambda r: -r.case.severity.weight):
-            lines += [
-                f"### {_ICON[result.outcome]} `{result.case.id}` ({result.case.severity.value})",
-                "",
-            ]
-            if result.case.description:
-                lines += [redact(result.case.description), ""]
+        for group in sorted(failures, key=lambda g: -g.case.severity.weight):
+            heading = f"### {_ICON[group.outcome]} `{group.case.id}` ({group.case.severity.value})"
+            if len(group.runs) > 1:
+                heading += f" — failed {len(group.failures)}/{len(group.graded)} runs"
+            lines += [heading, ""]
+
+            if group.case.description:
+                lines += [redact(group.case.description), ""]
+
+            result = group.representative
+            if result is None:
+                continue
             if result.error:
                 lines += [f"**Error:** {redact(result.error)}", ""]
             for check in result.failed_checks:
@@ -201,8 +257,11 @@ def to_markdown(run: RunResult) -> str:
             final = result.assistant_turns[-1] if result.assistant_turns else ""
             if final:
                 excerpt = redact(final[:1200])
+                label = "Final response"
+                if len(group.runs) > 1:
+                    label += f" (run {result.run_index + 1})"
                 lines += [
-                    "<details><summary>Final response</summary>",
+                    f"<details><summary>{label}</summary>",
                     "",
                     "```text",
                     excerpt + ("\n... (truncated)" if len(final) > 1200 else ""),
@@ -231,13 +290,13 @@ _CSS = """
 :root {
   --bg: #ffffff; --fg: #1a1a1a; --muted: #666; --line: #e2e2e2;
   --card: #fafafa; --pass: #1a7f37; --fail: #cf222e; --warn: #9a6700;
-  --accent: #0b5fff;
+  --accent: #0b5fff; --flake: #8250df;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #0d1117; --fg: #e6edf3; --muted: #9198a1; --line: #30363d;
     --card: #161b22; --pass: #3fb950; --fail: #f85149; --warn: #d29922;
-    --accent: #58a6ff;
+    --accent: #58a6ff; --flake: #a371f7;
   }
 }
 * { box-sizing: border-box; }
@@ -258,8 +317,10 @@ h2 { font-size: 1.15rem; margin: 2.5rem 0 .75rem; padding-bottom: .3rem;
 .tile .l { color: var(--muted); font-size: .78rem; text-transform: uppercase;
            letter-spacing: .04em; }
 .pass { color: var(--pass); } .fail { color: var(--fail); } .warn { color: var(--warn); }
+.flake { color: var(--flake); }
 .banner { background: var(--fail); color: #fff; padding: .8rem 1rem;
           border-radius: .5rem; font-weight: 600; margin: 1rem 0; }
+.banner.flakeb { background: var(--flake); }
 .tablewrap { overflow-x: auto; }
 table { border-collapse: collapse; width: 100%; font-size: .92rem; }
 th, td { text-align: left; padding: .5rem .7rem; border-bottom: 1px solid var(--line); }
@@ -270,7 +331,12 @@ td.num, th.num { text-align: right; }
         border-left: 3px solid var(--fail); border-radius: .5rem;
         padding: 1rem 1.15rem; margin: .85rem 0; }
 .case.err { border-left-color: var(--warn); }
+.case.flaky { border-left-color: var(--flake); }
 .case h3 { margin: 0 0 .3rem; font-size: 1rem; font-family: ui-monospace, monospace; }
+.bar { display: inline-block; vertical-align: middle; width: 5.5rem; height: .5rem;
+       background: var(--pass); border-radius: 999px; overflow: hidden;
+       margin-right: .5rem; }
+.bar > i { display: block; height: 100%; background: var(--fail); }
 .badge { display: inline-block; font-size: .7rem; font-weight: 700;
          text-transform: uppercase; letter-spacing: .05em; padding: .1rem .45rem;
          border-radius: .25rem; border: 1px solid currentColor; margin-left: .5rem; }
@@ -309,6 +375,13 @@ def to_html(run: RunResult) -> str:
             "critical-severity case did not pass.</div>"
         )
 
+    if run.flaky:
+        parts.append(
+            f'<div class="banner flakeb">🎲 {len(run.flaky)} FLAKY — these cases both '
+            "passed and failed across repeats. An intermittent guardrail is not a "
+            "guardrail.</div>"
+        )
+
     parts += [
         '<div class="tiles">',
         f'<div class="tile"><div class="n score {score_class}">{run.score}%</div>'
@@ -319,18 +392,24 @@ def to_html(run: RunResult) -> str:
         '<div class="l">Failed</div></div>',
         f'<div class="tile"><div class="n warn">{len(run.errored)}</div>'
         '<div class="l">Errored</div></div>',
-        "</div>",
     ]
+    if run.repeat > 1:
+        parts.append(
+            f'<div class="tile"><div class="n flake">{len(run.flaky)}</div>'
+            f'<div class="l">Flaky / {run.repeat}× runs</div></div>'
+        )
+    parts.append("</div>")
 
     by_family: dict[str, list[Any]] = {}
-    for result in run.results:
-        by_family.setdefault(result.case.family, []).append(result)
+    for group in run.results:
+        by_family.setdefault(group.case.family, []).append(group)
 
     parts += [
         "<h2>By family</h2>",
         '<div class="tablewrap"><table><thead><tr><th>Family</th>'
         '<th class="num">Passed</th><th class="num">Failed</th>'
-        '<th class="num">Errored</th></tr></thead><tbody>',
+        '<th class="num">Errored</th><th class="num">Flaky</th>'
+        "</tr></thead><tbody>",
     ]
     for family in sorted(by_family):
         rows = by_family[family]
@@ -338,24 +417,63 @@ def to_html(run: RunResult) -> str:
             f"<tr><td><code>{e(family)}</code></td>"
             f'<td class="num pass">{sum(1 for r in rows if r.outcome is Outcome.PASS)}</td>'
             f'<td class="num fail">{sum(1 for r in rows if r.outcome is Outcome.FAIL)}</td>'
-            f'<td class="num warn">{sum(1 for r in rows if r.outcome is Outcome.ERROR)}</td></tr>'
+            f'<td class="num warn">{sum(1 for r in rows if r.outcome is Outcome.ERROR)}</td>'
+            f'<td class="num flake">{sum(1 for r in rows if r.is_flaky)}</td></tr>'
         )
     parts.append("</tbody></table></div>")
+
+    if run.flaky:
+        parts += [
+            "<h2>Flaky cases</h2>",
+            "<p>Ranked by how often the guardrail moved. These are the most important "
+            "rows in the report: a case that fails 3 times in 10 looks like a clean pass "
+            "or a clean fail depending on which single run you happened to see.</p>",
+            '<div class="tablewrap"><table><thead><tr><th>Case</th><th>Severity</th>'
+            '<th class="num">Failed</th><th>Rate</th></tr></thead><tbody>',
+        ]
+        for group in sorted(run.flaky, key=lambda g: -g.flake_rate):
+            pct = group.flake_rate
+            parts.append(
+                f"<tr><td><code>{e(group.case.id)}</code></td>"
+                f"<td>{e(group.case.severity.value)}</td>"
+                f'<td class="num">{len(group.failures)}/{len(group.graded)}</td>'
+                f'<td><span class="bar"><i style="width:{pct:.0%}"></i></span>'
+                f"{pct:.0%}</td></tr>"
+            )
+        parts.append("</tbody></table></div>")
 
     failures = run.failed + run.errored
     parts.append("<h2>Failures</h2>")
     if not failures:
         parts.append("<p>None — every case passed. 🎉</p>")
-    for result in sorted(failures, key=lambda r: -r.case.severity.weight):
-        css = "case err" if result.outcome is Outcome.ERROR else "case"
-        sev_class = "fail" if result.case.severity is Severity.CRITICAL else "warn"
-        parts += [
-            f'<div class="{css}">',
-            f"<h3>{e(result.case.id)}"
-            f'<span class="badge {sev_class}">{result.case.severity.value}</span></h3>',
-        ]
-        if result.case.description:
-            parts.append(f'<div class="desc">{e(redact(result.case.description))}</div>')
+    for group in sorted(failures, key=lambda g: -g.case.severity.weight):
+        if group.outcome is Outcome.ERROR:
+            css = "case err"
+        elif group.is_flaky:
+            css = "case flaky"
+        else:
+            css = "case"
+        sev_class = "fail" if group.case.severity is Severity.CRITICAL else "warn"
+
+        heading = (
+            f"<h3>{e(group.case.id)}"
+            f'<span class="badge {sev_class}">{group.case.severity.value}</span>'
+        )
+        if len(group.runs) > 1:
+            heading += (
+                f'<span class="badge flake">{len(group.failures)}/'
+                f"{len(group.graded)} runs failed</span>"
+            )
+        heading += "</h3>"
+        parts += [f'<div class="{css}">', heading]
+
+        if group.case.description:
+            parts.append(f'<div class="desc">{e(redact(group.case.description))}</div>')
+
+        result = group.representative
+        if result is None:
+            parts.append("</div>")
+            continue
         if result.error:
             parts.append(f"<p><strong>Error:</strong> {e(redact(result.error))}</p>")
         if result.failed_checks:
@@ -369,8 +487,11 @@ def to_html(run: RunResult) -> str:
             body = redact(final[:4000])
             if len(final) > 4000:
                 body += "\n... (truncated)"
+            label = "Final response"
+            if len(group.runs) > 1:
+                label += f" (run {result.run_index + 1} of {len(group.runs)})"
             parts += [
-                "<details><summary>Final response</summary>",
+                f"<details><summary>{label}</summary>",
                 f"<pre>{e(body)}</pre></details>",
             ]
         parts.append("</div>")

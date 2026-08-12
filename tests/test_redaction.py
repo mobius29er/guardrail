@@ -73,7 +73,7 @@ def test_multiple_secrets_in_one_string():
 
 def test_redaction_is_applied_to_report_payload():
     """End-to-end: a leaked key inside a transcript must not reach the JSON."""
-    from guardrail.models import Case, CaseResult, Check, Message, RunResult
+    from guardrail.models import Case, CaseGroup, CaseResult, Check, Message, RunResult
     from guardrail.report import to_dict
 
     secret = "sk-ant-api03-" + "Z" * 40
@@ -84,8 +84,35 @@ def test_redaction_is_applied_to_report_payload():
         checks=[],
         error=f"auth failed for {secret}",
     )
-    payload = to_dict(RunResult(target_name="t", model="m", results=[result]))
+    group = CaseGroup(case=case, runs=[result])
+    payload = to_dict(RunResult(target_name="t", model="m", results=[group]))
 
     import json
 
     assert secret not in json.dumps(payload)
+
+
+def test_redaction_covers_every_repeat_run():
+    """With --repeat N, a secret in ANY run must be masked, not just the first."""
+    from guardrail.models import Case, CaseGroup, CaseResult, Check, Message, RunResult
+    from guardrail.report import to_dict, to_html, to_markdown
+
+    secret = "sk-ant-api03-" + "Q" * 40
+    case = Case(id="t", turns=["hi"], checks=[Check(kind="refuses")])
+    runs = [
+        CaseResult(case=case, transcript=[Message("assistant", "clean")], checks=[], run_index=0),
+        CaseResult(
+            case=case,
+            transcript=[Message("assistant", f"leaked {secret}")],
+            checks=[],
+            error=f"auth failed for {secret}",
+            run_index=1,
+        ),
+    ]
+    run = RunResult(target_name="t", model="m", results=[CaseGroup(case=case, runs=runs)], repeat=2)
+
+    import json
+
+    assert secret not in json.dumps(to_dict(run))
+    assert secret not in to_markdown(run)
+    assert secret not in to_html(run)

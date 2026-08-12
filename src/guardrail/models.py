@@ -175,11 +175,14 @@ class CheckResult:
 
 @dataclass
 class CaseResult:
+    """The result of executing a case exactly once."""
+
     case: Case
     transcript: list[Message]
     checks: list[CheckResult]
     error: str | None = None
     latency_s: float = 0.0
+    run_index: int = 0
 
     @property
     def outcome(self) -> Outcome:
@@ -199,24 +202,108 @@ class CaseResult:
 
 
 @dataclass
+class CaseGroup:
+    """Every execution of one case, graded as a set.
+
+    With ``--repeat 1`` this holds a single run and behaves like it. With
+    ``--repeat N`` it holds N, and the case is graded across the whole set —
+    because a guardrail that holds nine times and moves once has moved. That
+    is the entire point of repeating: a single run reports a coin flip as
+    though it were a measurement.
+
+    ``flake_threshold`` is the fraction of failing runs tolerated before the
+    case is marked failed. The default of 0.0 means any failure fails.
+    """
+
+    case: Case
+    runs: list[CaseResult]
+    flake_threshold: float = 0.0
+
+    @property
+    def graded(self) -> list[CaseResult]:
+        """Runs that produced a real verdict — infrastructure errors excluded."""
+        return [r for r in self.runs if r.outcome in (Outcome.PASS, Outcome.FAIL)]
+
+    @property
+    def failures(self) -> list[CaseResult]:
+        return [r for r in self.runs if r.outcome is Outcome.FAIL]
+
+    @property
+    def errors(self) -> list[CaseResult]:
+        return [r for r in self.runs if r.outcome is Outcome.ERROR]
+
+    @property
+    def outcome(self) -> Outcome:
+        """A network blip is not model behavior.
+
+        Errored runs only decide the outcome when nothing gradable survived;
+        otherwise the case is judged on the runs that actually completed.
+        """
+        if not self.graded:
+            if self.errors:
+                return Outcome.ERROR
+            return Outcome.SKIP
+        return Outcome.FAIL if self.flake_rate > self.flake_threshold else Outcome.PASS
+
+    @property
+    def flake_rate(self) -> float:
+        """Fraction of gradable runs that failed, 0.0–1.0."""
+        if not self.graded:
+            return 0.0
+        return len(self.failures) / len(self.graded)
+
+    @property
+    def is_flaky(self) -> bool:
+        """True when the case both passed and failed across its repeats.
+
+        This is the interesting state: not "the guardrail holds" or "the
+        guardrail fails", but "the guardrail is a coin flip" — which a
+        single run can never distinguish from either.
+        """
+        return 0 < len(self.failures) < len(self.graded)
+
+    @property
+    def representative(self) -> CaseResult | None:
+        """The run worth showing in a report — a failure if one exists."""
+        if self.failures:
+            return self.failures[0]
+        if self.errors and not self.graded:
+            return self.errors[0]
+        return self.runs[0] if self.runs else None
+
+    @property
+    def latency_s(self) -> float:
+        """Mean latency across runs."""
+        if not self.runs:
+            return 0.0
+        return round(sum(r.latency_s for r in self.runs) / len(self.runs), 2)
+
+
+@dataclass
 class RunResult:
     target_name: str
     model: str
-    results: list[CaseResult]
+    results: list[CaseGroup]
     started_at: str = ""
     duration_s: float = 0.0
+    repeat: int = 1
 
     @property
-    def passed(self) -> list[CaseResult]:
+    def passed(self) -> list[CaseGroup]:
         return [r for r in self.results if r.outcome is Outcome.PASS]
 
     @property
-    def failed(self) -> list[CaseResult]:
+    def failed(self) -> list[CaseGroup]:
         return [r for r in self.results if r.outcome is Outcome.FAIL]
 
     @property
-    def errored(self) -> list[CaseResult]:
+    def errored(self) -> list[CaseGroup]:
         return [r for r in self.results if r.outcome is Outcome.ERROR]
+
+    @property
+    def flaky(self) -> list[CaseGroup]:
+        """Cases that both passed and failed across repeats."""
+        return [r for r in self.results if r.is_flaky]
 
     @property
     def score(self) -> float:
