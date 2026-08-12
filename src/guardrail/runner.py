@@ -11,6 +11,7 @@ from guardrail.config import TargetConfig
 from guardrail.graders import REGISTRY, GradeContext
 from guardrail.models import (
     Case,
+    CaseGroup,
     CaseResult,
     CheckResult,
     Message,
@@ -21,7 +22,7 @@ from guardrail.models import (
 from guardrail.providers import build_provider
 from guardrail.providers.base import Provider, ProviderError
 
-ProgressFn = Callable[[CaseResult], None]
+ProgressFn = Callable[[CaseGroup], None]
 
 
 async def run_case(
@@ -29,6 +30,7 @@ async def run_case(
     provider: Provider,
     ctx: GradeContext,
     default_system: str | None = None,
+    run_index: int = 0,
 ) -> CaseResult:
     """Play one case's conversation to completion, then apply its checks.
 
@@ -53,6 +55,7 @@ async def run_case(
                 checks=[],
                 error=str(exc),
                 latency_s=round(time.monotonic() - started, 2),
+                run_index=run_index,
             )
         transcript.append(Message(role="assistant", content=reply))
 
@@ -109,6 +112,7 @@ async def run_case(
         transcript=transcript,
         checks=check_results,
         latency_s=round(time.monotonic() - started, 2),
+        run_index=run_index,
     )
 
 
@@ -119,8 +123,20 @@ async def run_suites(
     on_progress: ProgressFn | None = None,
     filter_family: str | None = None,
     filter_id: str | None = None,
+    repeat: int = 1,
+    flake_threshold: float = 0.0,
 ) -> RunResult:
-    """Run every case in ``suites`` against ``target``, bounded by concurrency."""
+    """Run every case in ``suites`` against ``target``, bounded by concurrency.
+
+    ``repeat`` executes each case that many times and grades it across the
+    whole set. Repeats of the same case run concurrently alongside everything
+    else — the semaphore bounds total in-flight requests, not cases.
+    """
+    if repeat < 1:
+        raise ValueError("repeat must be >= 1")
+    if not 0.0 <= flake_threshold <= 1.0:
+        raise ValueError("flake_threshold must be between 0.0 and 1.0")
+
     cases: list[Case] = []
     for suite in suites:
         for case in suite.cases:
@@ -138,15 +154,19 @@ async def run_suites(
     started_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     wall_start = time.monotonic()
 
-    async def guarded(case: Case) -> CaseResult:
+    async def one_run(case: Case, index: int) -> CaseResult:
         async with semaphore:
-            result = await run_case(case, provider, ctx, target.system)
-            if on_progress:
-                on_progress(result)
-            return result
+            return await run_case(case, provider, ctx, target.system, run_index=index)
+
+    async def group_for(case: Case) -> CaseGroup:
+        runs = await asyncio.gather(*(one_run(case, i) for i in range(repeat)))
+        group = CaseGroup(case=case, runs=list(runs), flake_threshold=flake_threshold)
+        if on_progress:
+            on_progress(group)
+        return group
 
     try:
-        results = await asyncio.gather(*(guarded(c) for c in cases))
+        results = await asyncio.gather(*(group_for(c) for c in cases))
     finally:
         await provider.aclose()
         if judge is not None:
@@ -158,4 +178,5 @@ async def run_suites(
         results=list(results),
         started_at=started_at,
         duration_s=round(time.monotonic() - wall_start, 2),
+        repeat=repeat,
     )

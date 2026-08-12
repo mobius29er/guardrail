@@ -11,7 +11,7 @@ from pathlib import Path
 from guardrail import __version__
 from guardrail.config import TargetConfig, load_suites
 from guardrail.graders import available_graders
-from guardrail.models import CaseResult, Outcome, RunResult, Severity
+from guardrail.models import CaseGroup, Outcome, RunResult, Severity
 from guardrail.providers import PROVIDERS
 from guardrail.report import redact, write_html, write_json, write_markdown
 from guardrail.runner import run_suites
@@ -28,6 +28,19 @@ ICON = {
     Outcome.ERROR: "\033[33m!\033[0m",
     Outcome.SKIP: "\033[90m-\033[0m",
 }
+# A case that both passed and failed across repeats gets its own marker — it is
+# neither of the other two, and conflating it with either hides the finding.
+FLAKY_ICON = "\033[35m~\033[0m"
+
+
+def _temperature_of(target: TargetConfig) -> float | None:
+    """The configured sampling temperature, if the target sets one."""
+    raw = target.provider.get("temperature")
+    try:
+        return float(raw) if raw is not None else None
+    except (TypeError, ValueError):
+        return None
+
 
 DIM = "\033[90m"
 BOLD = "\033[1m"
@@ -72,36 +85,48 @@ def cmd_run(args: argparse.Namespace) -> int:
         return EXIT_CONFIG
 
     total = sum(len(s.cases) for s in suites)
+    repeat = max(1, int(args.repeat))
     print(
         _c(
             f"{BOLD}Guardrail{RESET} → {target.name} "
             f"{DIM}({target.provider.get('name')}/{target.model}){RESET}"
         )
     )
-    print(
-        _c(
-            f"{DIM}{total} case(s) across {len(suites)} suite(s), "
-            f"concurrency {target.concurrency}{RESET}\n"
+    detail = f"{total} case(s) across {len(suites)} suite(s), concurrency {target.concurrency}"
+    if repeat > 1:
+        detail += f", {repeat}× repeats ({total * repeat} runs)"
+    print(_c(f"{DIM}{detail}{RESET}\n"))
+
+    if repeat > 1 and _temperature_of(target) == 0:
+        print(
+            _c(
+                f"  {DIM}note: temperature is 0, so repeats measure only provider-side "
+                f"nondeterminism. Set it to your production value to measure what users "
+                f"actually hit.{RESET}\n"
+            )
         )
-    )
 
     done = 0
 
-    def on_progress(result: CaseResult) -> None:
+    def on_progress(group: CaseGroup) -> None:
         nonlocal done
         done += 1
-        icon = ICON[result.outcome]
-        sev = result.case.severity.value
-        line = (
-            f"  {icon} [{done}/{total}] {result.case.id} {DIM}({sev}, {result.latency_s}s){RESET}"
-        )
-        print(_c(line))
-        if result.outcome is Outcome.FAIL:
+        icon = FLAKY_ICON if group.is_flaky else ICON[group.outcome]
+        sev = group.case.severity.value
+        meta = f"{sev}, {group.latency_s}s"
+        if len(group.runs) > 1:
+            meta = f"{sev}, {len(group.failures)}/{len(group.graded)} failed, {group.latency_s}s"
+        print(_c(f"  {icon} [{done}/{total}] {group.case.id} {DIM}({meta}){RESET}"))
+
+        result = group.representative
+        if result is None:
+            return
+        if group.outcome is Outcome.FAIL:
             for check in result.failed_checks:
                 print(
                     _c(f"      {DIM}└─{RESET} \033[31m{check.kind}\033[0m: {redact(check.reason)}")
                 )
-        elif result.outcome is Outcome.ERROR and result.error:
+        elif group.outcome is Outcome.ERROR and result.error:
             print(_c(f"      {DIM}└─{RESET} \033[33m{redact(result.error)}\033[0m"))
 
     try:
@@ -112,6 +137,8 @@ def cmd_run(args: argparse.Namespace) -> int:
                 on_progress=on_progress,
                 filter_family=args.family,
                 filter_id=args.case,
+                repeat=repeat,
+                flake_threshold=args.flake_threshold,
             )
         )
     except ValueError as exc:
@@ -152,15 +179,31 @@ def _print_summary(run: RunResult) -> None:
     score_color = "\033[32m" if run.score >= 90 else "\033[33m" if run.score >= 70 else "\033[31m"
     print()
     print(_c(f"{BOLD}{'─' * 58}{RESET}"))
-    print(
-        _c(
-            f"  {BOLD}Score {score_color}{run.score}%{RESET}   "
-            f"\033[32m{len(run.passed)} passed\033[0m  "
-            f"\033[31m{len(run.failed)} failed\033[0m  "
-            f"\033[33m{len(run.errored)} errored\033[0m  "
-            f"{DIM}{run.duration_s}s{RESET}"
-        )
+    summary = (
+        f"  {BOLD}Score {score_color}{run.score}%{RESET}   "
+        f"\033[32m{len(run.passed)} passed\033[0m  "
+        f"\033[31m{len(run.failed)} failed\033[0m  "
+        f"\033[33m{len(run.errored)} errored\033[0m  "
     )
+    if run.repeat > 1:
+        summary += f"\033[35m{len(run.flaky)} flaky\033[0m  "
+    print(_c(summary + f"{DIM}{run.duration_s}s{RESET}"))
+
+    if run.flaky:
+        print(
+            _c(
+                f"  \033[45m\033[97m FLAKY \033[0m {len(run.flaky)} case(s) both passed "
+                f"and failed across {run.repeat} runs:"
+            )
+        )
+        for group in sorted(run.flaky, key=lambda g: -g.flake_rate):
+            print(
+                _c(
+                    f"      • {group.case.id} {DIM}"
+                    f"{len(group.failures)}/{len(group.graded)} failed "
+                    f"({group.flake_rate:.0%}){RESET}"
+                )
+            )
 
     critical = [
         r
@@ -173,8 +216,8 @@ def _print_summary(run: RunResult) -> None:
                 f"  \033[41m\033[97m CRITICAL \033[0m {len(critical)} critical case(s) did not pass:"
             )
         )
-        for result in critical:
-            print(_c(f"      • {result.case.id}"))
+        for group in critical:
+            print(_c(f"      • {group.case.id}"))
     print(_c(f"{BOLD}{'─' * 58}{RESET}"))
 
 
@@ -324,6 +367,29 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_run.add_argument("--family", help="only run cases in this family")
     p_run.add_argument("--case", help="only run cases whose id contains this substring")
+    p_run.add_argument(
+        "--repeat",
+        "-n",
+        type=int,
+        default=1,
+        metavar="N",
+        help=(
+            "run every case N times and grade across the whole set. A case fails "
+            "if ANY run fails, and cases that both pass and fail are reported as "
+            "flaky. Use this to tell a real guardrail from a coin flip."
+        ),
+    )
+    p_run.add_argument(
+        "--flake-threshold",
+        type=float,
+        default=0.0,
+        metavar="RATE",
+        help=(
+            "fraction of failing runs tolerated before a case is marked failed "
+            "(0.0–1.0, default 0.0 = any failure fails). --flake-threshold 0.1 "
+            "accepts up to one failure in ten."
+        ),
+    )
     p_run.add_argument(
         "--fail-under",
         type=float,
