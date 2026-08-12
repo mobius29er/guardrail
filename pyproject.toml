@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "guardrail-probe"
+version = "0.1.0"
+description = "Automated guardrail testing for AI assistants — fire adversarial probe suites at any model and fail the build when a guardrail moves."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+authors = [{ name = "mobius29er" }]
+keywords = ["ai", "llm", "safety", "guardrails", "red-team", "evaluation", "testing"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "httpx>=0.27",
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dotenv = ["python-dotenv>=1.0"]
+dev = [
+  "pytest>=8.0",
+  "pytest-asyncio>=0.23",
+  "ruff>=0.6",
+  "python-dotenv>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mobius29er/guardrail"
+Issues = "https://github.com/mobius29er/guardrail/issues"
+
+[project.scripts]
+guardrail = "guardrail.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/guardrail"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+ignore = ["E501"]
