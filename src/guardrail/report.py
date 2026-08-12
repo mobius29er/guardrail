@@ -85,6 +85,7 @@ def to_dict(run: RunResult, *, include_transcripts: bool = True) -> dict[str, An
         "duration_s": run.duration_s,
         "score": run.score,
         "repeat": run.repeat,
+        "sweep": run.sweep,
         "summary": {
             "total": len(run.results),
             "passed": len(run.passed),
@@ -112,6 +113,12 @@ def to_dict(run: RunResult, *, include_transcripts: bool = True) -> dict[str, An
             "runs_errored": len(group.errors),
             "runs": [],
         }
+        if group.case.sweep_base is not None:
+            entry["sweep"] = {
+                "base": group.case.sweep_base,
+                "position": (group.case.sweep_position or 0) + 1,
+                "of": group.case.sweep_total,
+            }
 
         for result in group.runs:
             run_entry: dict[str, Any] = {
@@ -213,6 +220,33 @@ def to_markdown(run: RunResult) -> str:
             f"| {sum(1 for r in rows if r.is_flaky)} |"
         )
     lines.append("")
+
+    if run.sweeps:
+        lines += [
+            "## Position sweep",
+            "",
+            "Flake rate as a function of where the swept turn landed. A rising "
+            "trend means the build-up is doing the work (cumulative context "
+            "degradation). A flat line means the prompt is inherently strong and "
+            "position is irrelevant.",
+            "",
+        ]
+        for base, variants in sorted(run.sweeps.items()):
+            lines += [
+                f"### `{base}`",
+                "",
+                "| Position | Outcome | Failed | Rate |",
+                "|---:|---|---:|---:|",
+            ]
+            for group in variants:
+                pos = (group.case.sweep_position or 0) + 1
+                lines.append(
+                    f"| {pos} of {group.case.sweep_total} "
+                    f"| {_ICON[group.outcome]} {group.outcome.value} "
+                    f"| {len(group.failures)}/{len(group.graded)} "
+                    f"| {group.flake_rate:.0%} |"
+                )
+            lines.append("")
 
     if run.flaky:
         lines += [
@@ -421,6 +455,38 @@ def to_html(run: RunResult) -> str:
             f'<td class="num flake">{sum(1 for r in rows if r.is_flaky)}</td></tr>'
         )
     parts.append("</tbody></table></div>")
+
+    if run.sweeps:
+        parts += [
+            "<h2>Position sweep</h2>",
+            "<p>Flake rate as a function of where the swept turn landed. A rising "
+            "trend means the build-up is doing the work (cumulative context "
+            "degradation). A flat line means the prompt is inherently strong and "
+            "position is irrelevant.</p>",
+        ]
+        for base, variants in sorted(run.sweeps.items()):
+            parts += [
+                f"<h3><code>{e(base)}</code></h3>",
+                '<div class="tablewrap"><table><thead><tr><th>Position</th>'
+                '<th>Outcome</th><th class="num">Failed</th><th>Rate</th>'
+                "</tr></thead><tbody>",
+            ]
+            for group in variants:
+                pos = (group.case.sweep_position or 0) + 1
+                cls = {
+                    Outcome.PASS: "pass",
+                    Outcome.FAIL: "fail",
+                    Outcome.ERROR: "warn",
+                    Outcome.SKIP: "",
+                }[group.outcome]
+                parts.append(
+                    f"<tr><td>{pos} of {group.case.sweep_total}</td>"
+                    f'<td class="{cls}">{group.outcome.value}</td>'
+                    f'<td class="num">{len(group.failures)}/{len(group.graded)}</td>'
+                    f'<td><span class="bar"><i style="width:{group.flake_rate:.0%}"></i>'
+                    f"</span>{group.flake_rate:.0%}</td></tr>"
+                )
+            parts.append("</tbody></table></div>")
 
     if run.flaky:
         parts += [

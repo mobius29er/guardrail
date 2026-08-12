@@ -7,7 +7,7 @@ and report layers can stay independent of one another.
 from __future__ import annotations
 
 import enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 
@@ -42,19 +42,31 @@ class Message:
     content: str
 
 
+# Sentinel for `turn: swept` — grade the response to the swept turn, wherever
+# that turn landed in this positional variant. Without it, a check targeting a
+# fixed index would grade a different prompt's response at every position, which
+# is exactly the silent-garbage failure a sweep is supposed to avoid.
+SWEPT = -1000
+
+
 @dataclass
 class Check:
     """A single assertion applied to a case's transcript.
 
     ``kind`` names a grader registered in :mod:`guardrail.graders`. ``params``
     is passed through to it verbatim. ``turn`` selects which assistant response
-    to grade: an index (0-based), or -1 for the last one (the default).
+    to grade: an index (0-based), -1 for the last one (the default), or the
+    literal ``swept`` to follow the swept turn in a position sweep.
     """
 
     kind: str
     params: dict[str, Any] = field(default_factory=dict)
     turn: int = -1
     description: str = ""
+
+    @property
+    def follows_swept_turn(self) -> bool:
+        return self.turn == SWEPT
 
     @classmethod
     def from_yaml(cls, raw: dict[str, Any]) -> Check:
@@ -63,8 +75,14 @@ class Check:
         if not kind:
             raise ValueError(f"check is missing required key 'kind': {raw!r}")
         turn = data.pop("turn", -1)
+        if isinstance(turn, str):
+            if turn.strip().lower() != "swept":
+                raise ValueError(
+                    f"check 'turn' must be an integer or the literal 'swept', got {turn!r}"
+                )
+            turn = SWEPT
         description = data.pop("description", "")
-        return cls(kind=kind, params=data, turn=turn, description=description)
+        return cls(kind=kind, params=data, turn=int(turn), description=description)
 
 
 @dataclass
@@ -83,6 +101,52 @@ class Case:
     description: str = ""
     system: str | None = None
     tags: list[str] = field(default_factory=list)
+
+    #: Index of the turn whose position is under test. Set by `sweep_turn:` in
+    #: YAML. Only expanded when the run opts in with --sweep.
+    sweep_turn: int | None = None
+    #: On an expanded variant: where the swept turn landed (0-based).
+    sweep_position: int | None = None
+    #: On an expanded variant: how many positions the sweep covers.
+    sweep_total: int | None = None
+    #: On an expanded variant: the id of the case it was expanded from.
+    sweep_base: str | None = None
+
+    @property
+    def is_sweep_variant(self) -> bool:
+        return self.sweep_position is not None
+
+    def expand_sweep(self) -> list[Case]:
+        """Slide the swept turn through every position, holding the rest fixed.
+
+        This is the designed alternative to random shuffling. Randomizing order
+        confounds position with neighborhood — a turn at index 3 has different
+        predecessors on every draw, so "position 3 is dangerous" cannot be
+        separated from "that particular preceding turn is dangerous". Moving one
+        turn through a fixed sequence isolates position cleanly, and N positions
+        beats sampling N! permutations.
+
+        Returns ``[self]`` unchanged when no sweep is declared.
+        """
+        if self.sweep_turn is None:
+            return [self]
+
+        swept = self.turns[self.sweep_turn]
+        others = [t for i, t in enumerate(self.turns) if i != self.sweep_turn]
+        total = len(self.turns)
+
+        return [
+            replace(
+                self,
+                id=f"{self.id}@pos{pos + 1}",
+                turns=others[:pos] + [swept] + others[pos:],
+                sweep_turn=None,  # expanded variants must not re-expand
+                sweep_position=pos,
+                sweep_total=total,
+                sweep_base=self.id,
+            )
+            for pos in range(total)
+        ]
 
     @classmethod
     def from_yaml(cls, raw: dict[str, Any]) -> Case:
@@ -114,6 +178,31 @@ class Case:
                 f"(expected one of: {valid})"
             ) from None
 
+        sweep_turn = raw.get("sweep_turn")
+        if sweep_turn is not None:
+            sweep_turn = int(sweep_turn)
+            if not 0 <= sweep_turn < len(turns):
+                raise ValueError(
+                    f"case {raw['id']!r} sets sweep_turn={sweep_turn} but has {len(turns)} turn(s)"
+                )
+            if len(turns) < 2:
+                raise ValueError(
+                    f"case {raw['id']!r} declares a sweep but has only one turn — "
+                    "there is nothing to sweep across"
+                )
+            # `consistent_with` compares against a fixed baseline index. Under a
+            # sweep that index holds a different prompt at every position, so the
+            # grader would keep reporting DRIFT/HELD against a moving target — no
+            # error, just meaningless numbers. Reject it rather than average it.
+            offenders = [c.kind for c in checks if c.kind == "consistent_with"]
+            if offenders:
+                raise ValueError(
+                    f"case {raw['id']!r} cannot combine sweep_turn with "
+                    f"'consistent_with': the baseline turn moves between positions, "
+                    f"so the comparison would be meaningless. Use 'turn: swept' with "
+                    f"a positional grader instead, or split the sweep into its own case."
+                )
+
         return cls(
             id=str(raw["id"]),
             turns=[str(t) for t in turns],
@@ -123,6 +212,7 @@ class Case:
             description=str(raw.get("description", "")),
             system=raw.get("system"),
             tags=[str(t) for t in raw.get("tags", [])],
+            sweep_turn=sweep_turn,
         )
 
 
@@ -287,6 +377,23 @@ class RunResult:
     started_at: str = ""
     duration_s: float = 0.0
     repeat: int = 1
+    sweep: bool = False
+
+    @property
+    def sweeps(self) -> dict[str, list[CaseGroup]]:
+        """Sweep variants grouped by the case they were expanded from.
+
+        Each list is ordered by position, so the flake rate across it reads
+        directly as a function of where the swept turn landed.
+        """
+        grouped: dict[str, list[CaseGroup]] = {}
+        for group in self.results:
+            base = group.case.sweep_base
+            if base is not None:
+                grouped.setdefault(base, []).append(group)
+        for variants in grouped.values():
+            variants.sort(key=lambda g: g.case.sweep_position or 0)
+        return grouped
 
     @property
     def passed(self) -> list[CaseGroup]:
