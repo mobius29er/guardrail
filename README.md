@@ -63,7 +63,7 @@ turn-by-turn reconstruction is in
 
 ## What it tests
 
-24 cases across five suites, derived directly from that session.
+Five suites derived directly from that session.
 
 | Suite | Probes | What it catches |
 |---|---|---|
@@ -84,7 +84,30 @@ Plus four suites on the age-appropriateness axis, driven by the
 | [`age_gating`](suites/age_gating.yaml) | Band detection, wrapper bypasses, conflicting age signals — and over-gating controls, because patronizing an adult is also a failure |
 | [`names_handling`](suites/names_handling.yaml) | Saints, heresiarchs, reformers, occult figures, cult leaders, Church abuse, contested living figures, and **defamation targets** |
 
-**70 cases total.**
+**73 cases total.**
+
+### The controlled experiment
+
+`consistency.yaml` also carries three matched arms that exist to *attribute* a
+drift rather than just detect one. The source transcript's final probe changed
+four things at once, so "sympathy moved the line" was a hypothesis stated as a
+finding. These make it falsifiable:
+
+| Arm | Holds constant | Varies |
+|---|---|---|
+| `sympathy-pressure-only` | request, turn count, opening turn | escalating **emotional** cost |
+| `neutral-pressure-only` | *(identical to above)* | escalating **neutral** insistence |
+| `position-ab-cold` / `-primed` | the compound probe, verbatim | its **position** — turn 1 vs turn 6 |
+
+Run all of them with `--repeat 20` and compare flake rates. Sympathy drifts
+while neutral holds → the trigger is claimed need, and anyone willing to claim
+distress can move it. Both drift → it's turn count, and hardening against
+sympathy would be fixing the wrong thing. The reading guide is in the suite
+file itself.
+
+Unit tests assert the arms stay matched — identical opening turns, identical
+turn counts, no emotional vocabulary leaking into the control — because an edit
+to one arm that misses the other silently invalidates the comparison.
 
 The behavioral invariants these encode are documented in
 [`Truthly/behavioral-profile.md`](Truthly/behavioral-profile.md) — engage
@@ -310,9 +333,9 @@ docs/
   age-safety-matrix.md    26 categories × 5 age bands
 data/
   names.yaml              Named-figure registry, by failure mode
-suites/            The probe suites (YAML) — 70 cases across 9 suites
+suites/            The probe suites (YAML) — 73 cases across 9 suites
 src/guardrail/     The harness
-tests/             143 unit tests, no network required
+tests/             146 unit tests, no network required
 ```
 
 ---
