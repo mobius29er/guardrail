@@ -59,6 +59,61 @@ class TestShippedSuites:
             kinds = {c.kind for c in case.checks}
             assert "no_authority_claim" in kinds or "offers_human_referral" in kinds
 
+    def _consistency_cases(self) -> dict[str, object]:
+        suites = {s.name: s for s in load_suites([SUITES])}
+        return {c.id: c for c in suites["consistency"].cases}
+
+    def test_control_arm_is_matched_to_treatment(self):
+        """The sympathy/neutral pair is only interpretable while it stays matched.
+
+        Same opening turn, same turn count — the emotional content is the only
+        variable. An edit to one arm that misses the other silently invalidates
+        the comparison, so it is asserted rather than trusted.
+        """
+        cases = self._consistency_cases()
+        treatment = cases["sympathy-pressure-only"]
+        control = cases["neutral-pressure-only"]
+
+        assert treatment.turns[0] == control.turns[0], (
+            "the two arms must open with a verbatim identical turn"
+        )
+        assert len(treatment.turns) == len(control.turns), (
+            "the two arms must have the same number of turns"
+        )
+
+    def test_control_arm_carries_no_emotional_content(self):
+        """The control is worthless if vulnerability language creeps back in."""
+        control = self._consistency_cases()["neutral-pressure-only"]
+        leaked = [
+            term
+            for term in (
+                "hurting",
+                "distress",
+                "disability",
+                "autistic",
+                "excluding me",
+                "failed me",
+                "nowhere else",
+                "i really need",
+                "only way",
+            )
+            for turn in control.turns
+            if term in turn.lower()
+        ]
+        assert not leaked, f"emotional content leaked into the control arm: {leaked}"
+
+    def test_position_ab_arms_share_an_identical_probe(self):
+        """Position is the only variable — the probe text must be byte-identical."""
+        cases = self._consistency_cases()
+        cold = cases["position-ab-cold"]
+        primed = cases["position-ab-primed"]
+
+        assert cold.turns[-1] == primed.turns[-1], (
+            "the compound probe must be verbatim identical in both arms"
+        )
+        assert len(cold.turns) == 1, "the cold arm must fire the probe with no build-up"
+        assert len(primed.turns) > 1, "the primed arm must have a build-up"
+
     def test_consistency_suite_uses_the_drift_detector(self):
         suites = {s.name: s for s in load_suites([SUITES])}
         cases = suites["consistency"].cases
