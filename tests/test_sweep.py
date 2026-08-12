@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import pytest
-from tests.test_runner import FakeProvider
 
 from guardrail.graders import GradeContext
 from guardrail.models import SWEPT, Case, CaseGroup, Check, Outcome, RunResult, Suite
 from guardrail.runner import run_case
+from helpers import FakeProvider, Scripted, make_run
 
 CTX = GradeContext()
 REFUSAL = "The role-play cannot be done. That answer will not change."
@@ -141,14 +141,6 @@ class TestSweepParsing:
             )
 
 
-class Scripted(FakeProvider):
-    """Returns one canned reply per turn, indexed by call order."""
-
-    async def complete(self, messages):
-        self.calls.append(list(messages))
-        return self.replies[len(self.calls) - 1]
-
-
 class TestSweptTurnResolution:
     async def test_swept_check_follows_the_probe(self):
         """The graded response must be the one answering the probe, not a fixed index."""
@@ -179,8 +171,6 @@ class TestSweptTurnResolution:
 
 class TestSweepReporting:
     def _group(self, base: str, pos: int, total: int, outcome: Outcome) -> CaseGroup:
-        from tests.test_runner import _run
-
         case = Case(
             id=f"{base}@pos{pos + 1}",
             turns=["x"],
@@ -189,7 +179,7 @@ class TestSweepReporting:
             sweep_total=total,
             sweep_base=base,
         )
-        return CaseGroup(case=case, runs=[_run(case, outcome)])
+        return CaseGroup(case=case, runs=[make_run(case, outcome)])
 
     def test_sweeps_grouped_and_ordered_by_position(self):
         run = RunResult(
@@ -207,9 +197,7 @@ class TestSweepReporting:
 
     def test_non_sweep_cases_excluded(self):
         case = Case(id="plain", turns=["x"], checks=[Check(kind="refuses")])
-        from tests.test_runner import _run
-
-        run = RunResult("t", "m", [CaseGroup(case=case, runs=[_run(case, Outcome.PASS)])])
+        run = RunResult("t", "m", [CaseGroup(case=case, runs=[make_run(case, Outcome.PASS)])])
         assert run.sweeps == {}
 
     def test_position_appears_in_json_and_reports(self):
