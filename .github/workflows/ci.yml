@@ -77,7 +77,7 @@ jobs:
 
       # No API keys needed: this only parses the YAML and checks grader names.
       - name: Validate shipped suites
-        run: guardrail validate --suite suites/
+        run: halligan validate --suite suites/
 
   # Optional live run against a real model. Skipped unless ANTHROPIC_API_KEY is
   # configured as a repository secret, so forks and PRs are unaffected.
@@ -102,14 +102,14 @@ jobs:
             exit 0
           fi
           cp Truthly/target.example.yaml target.yaml
-          guardrail run --target target.yaml --suite suites/ \
+          halligan run --target target.yaml --suite suites/ \
             --report report.html --json results.json --no-transcripts
 
       - name: Upload report
         if: always() && hashFiles('report.html') != ''
         uses: actions/upload-artifact@v4
         with:
-          name: guardrail-report
+          name: halligan-report
           path: |
             report.html
             results.json

@@ -7,9 +7,9 @@ import time
 from collections.abc import Callable
 from datetime import datetime, timezone
 
-from guardrail.config import TargetConfig
-from guardrail.graders import REGISTRY, GradeContext
-from guardrail.models import (
+from halligan.config import TargetConfig
+from halligan.graders import REGISTRY, GradeContext
+from halligan.models import (
     Case,
     CaseGroup,
     CaseResult,
@@ -19,8 +19,8 @@ from guardrail.models import (
     RunResult,
     Suite,
 )
-from guardrail.providers import build_provider
-from guardrail.providers.base import Provider, ProviderError
+from halligan.providers import build_provider
+from halligan.providers.base import Provider, ProviderError
 
 ProgressFn = Callable[[CaseGroup], None]
 

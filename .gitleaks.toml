@@ -1,4 +1,4 @@
-title = "Guardrail gitleaks config"
+title = "Halligan gitleaks config"
 
 # Start from the maintained upstream ruleset, then narrow the allowlist.
 [extend]
@@ -13,7 +13,7 @@ paths = [
   # Redaction tests contain deliberately key-shaped synthetic strings.
   '''^tests/test_redaction\.py$''',
   # The redaction patterns themselves look like the things they match.
-  '''^src/guardrail/report\.py$''',
+  '''^src/halligan/report\.py$''',
 ]
 
 # NOTE: gitleaks compiles these with Go's RE2 engine, which does NOT support

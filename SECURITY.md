@@ -3,12 +3,12 @@
 ## Reporting a vulnerability
 
 Please report security issues **privately** using GitHub's
-[private vulnerability reporting](https://github.com/mobius29er/guardrail/security/advisories/new)
+[private vulnerability reporting](https://github.com/mobius29er/halligan/security/advisories/new)
 rather than opening a public issue. We aim to acknowledge reports within 7 days.
 
 ## Scope
 
-Guardrail is a testing harness. The most likely security issues are:
+Halligan is a testing harness. The most likely security issues are:
 
 - **Credential leakage** — keys ending up in logs, run artifacts, or commits.
 - **Prompt/response artifacts** — run output containing sensitive conversation text.
@@ -16,14 +16,14 @@ Guardrail is a testing harness. The most likely security issues are:
 
 ## How this project handles credentials
 
-Guardrail **never** takes an API key as a command-line argument, and never
+Halligan **never** takes an API key as a command-line argument, and never
 writes one to disk.
 
 1. Keys are read from the environment only (`os.environ`), loaded from `.env`
    via `python-dotenv` at startup.
 2. `.env`, `*.key`, `*.pem`, and friends are gitignored — see [`.gitignore`](.gitignore).
 3. Every run artifact is passed through a redaction filter
-   (`guardrail.report.redact`) that masks anything matching known key formats
+   (`halligan.report.redact`) that masks anything matching known key formats
    (`sk-...`, `sk-ant-...`, `AIza...`, bearer tokens, and generic 32+ char
    high-entropy strings) before it is written or printed.
 4. [gitleaks](https://github.com/gitleaks/gitleaks) runs in CI on every push and

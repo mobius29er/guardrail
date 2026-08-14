@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "guardrail-probe"
+name = "halligan"
 version = "0.1.0"
 description = "Automated guardrail testing for AI assistants — fire adversarial probe suites at any model and fail the build when a guardrail moves."
 readme = "README.md"
@@ -38,14 +38,14 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mobius29er/guardrail"
-Issues = "https://github.com/mobius29er/guardrail/issues"
+Homepage = "https://github.com/mobius29er/halligan"
+Issues = "https://github.com/mobius29er/halligan/issues"
 
 [project.scripts]
-guardrail = "guardrail.cli:main"
+halligan = "halligan.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/guardrail"]
+packages = ["src/halligan"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

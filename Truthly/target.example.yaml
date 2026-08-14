@@ -2,7 +2,7 @@
 # Example target config.
 #
 #   cp Truthly/target.example.yaml target.yaml
-#   guardrail run --target target.yaml --suite suites/ --report report.html
+#   halligan run --target target.yaml --suite suites/ --report report.html
 #
 # `target.yaml` is NOT gitignored by default — so never put a key in it.
 # Credentials always come from the environment. See SECURITY.md.

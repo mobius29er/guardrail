@@ -14,11 +14,11 @@ Configure the request and response shape declaratively in the target config::
         system_prompt: "{{system}}"
       # Dotted path to the reply text in the response JSON.
       response_path: data.reply
-      # Optional: extra headers. Use {{token}} for GUARDRAIL_HTTP_TOKEN.
+      # Optional: extra headers. Use {{token}} for HALLIGAN_HTTP_TOKEN.
       headers:
         authorization: "Bearer {{token}}"
 
-Credentials come from ``GUARDRAIL_HTTP_TOKEN``; never put a literal token in
+Credentials come from ``HALLIGAN_HTTP_TOKEN``; never put a literal token in
 the config file.
 """
 
@@ -27,8 +27,8 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from guardrail.models import Message
-from guardrail.providers.base import Provider, ProviderError, split_system
+from halligan.models import Message
+from halligan.providers.base import Provider, ProviderError, split_system
 
 DEFAULT_BODY: dict[str, Any] = {
     "model": "{{model}}",
@@ -42,15 +42,15 @@ class HTTPProvider(Provider):
     def _build_request(self, messages: list[Message]) -> tuple[str, dict[str, str], dict[str, Any]]:
         extra = dict(self.extra)
 
-        url = extra.pop("url", None) or os.environ.get("GUARDRAIL_HTTP_URL")
+        url = extra.pop("url", None) or os.environ.get("HALLIGAN_HTTP_URL")
         if not url:
             raise ProviderError(
                 "http provider requires 'url' in the provider block, "
-                "or the GUARDRAIL_HTTP_URL environment variable"
+                "or the HALLIGAN_HTTP_URL environment variable"
             )
 
         system, rest = split_system(messages)
-        token = os.environ.get("GUARDRAIL_HTTP_TOKEN", "")
+        token = os.environ.get("HALLIGAN_HTTP_TOKEN", "")
 
         subs: dict[str, Any] = {
             "{{messages}}": [{"role": m.role, "content": m.content} for m in rest],

@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from guardrail.config import load_suites
-from guardrail.graders import REGISTRY, GradeContext
-from guardrail.models import Severity
+from halligan.config import load_suites
+from halligan.graders import REGISTRY, GradeContext
+from halligan.models import Severity
 
 CTX = GradeContext()
 REPO = Path(__file__).resolve().parent.parent

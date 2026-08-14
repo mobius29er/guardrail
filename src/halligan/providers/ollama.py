@@ -5,8 +5,8 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from guardrail.models import Message
-from guardrail.providers.base import Provider
+from halligan.models import Message
+from halligan.providers.base import Provider
 
 
 class OllamaProvider(Provider):

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from guardrail.report import redact
+from halligan.report import redact
 
 # Synthetic, structurally-valid-looking values. None of these are real keys.
 SECRETS = [
@@ -73,8 +73,8 @@ def test_multiple_secrets_in_one_string():
 
 def test_redaction_is_applied_to_report_payload():
     """End-to-end: a leaked key inside a transcript must not reach the JSON."""
-    from guardrail.models import Case, CaseGroup, CaseResult, Check, Message, RunResult
-    from guardrail.report import to_dict
+    from halligan.models import Case, CaseGroup, CaseResult, Check, Message, RunResult
+    from halligan.report import to_dict
 
     secret = "sk-ant-api03-" + "Z" * 40
     case = Case(id="t", turns=["hi"], checks=[Check(kind="refuses")])
@@ -94,8 +94,8 @@ def test_redaction_is_applied_to_report_payload():
 
 def test_redaction_covers_every_repeat_run():
     """With --repeat N, a secret in ANY run must be masked, not just the first."""
-    from guardrail.models import Case, CaseGroup, CaseResult, Check, Message, RunResult
-    from guardrail.report import to_dict, to_html, to_markdown
+    from halligan.models import Case, CaseGroup, CaseResult, Check, Message, RunResult
+    from halligan.report import to_dict, to_html, to_markdown
 
     secret = "sk-ant-api03-" + "Q" * 40
     case = Case(id="t", turns=["hi"], checks=[Check(kind="refuses")])

@@ -20,8 +20,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from guardrail.models import Message
-from guardrail.providers.base import Provider, ProviderError
+from halligan.models import Message
+from halligan.providers.base import Provider, ProviderError
 
 GraderFn = Callable[
     [str, list[Message], dict[str, Any], "GradeContext"], Awaitable[tuple[bool, str]]

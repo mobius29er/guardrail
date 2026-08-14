@@ -8,13 +8,13 @@ import os
 import sys
 from pathlib import Path
 
-from guardrail import __version__
-from guardrail.config import TargetConfig, load_suites
-from guardrail.graders import available_graders
-from guardrail.models import CaseGroup, Outcome, RunResult, Severity
-from guardrail.providers import PROVIDERS
-from guardrail.report import redact, write_html, write_json, write_markdown
-from guardrail.runner import run_suites
+from halligan import __version__
+from halligan.config import TargetConfig, load_suites
+from halligan.graders import available_graders
+from halligan.models import CaseGroup, Outcome, RunResult, Severity
+from halligan.providers import PROVIDERS
+from halligan.report import redact, write_html, write_json, write_markdown
+from halligan.runner import run_suites
 
 # Exit codes
 EXIT_OK = 0
@@ -90,7 +90,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     repeat = max(1, int(args.repeat))
     print(
         _c(
-            f"{BOLD}Guardrail{RESET} → {target.name} "
+            f"{BOLD}Halligan{RESET} → {target.name} "
             f"{DIM}({target.provider.get('name')}/{target.model}){RESET}"
         )
     )
@@ -310,7 +310,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 
 def cmd_graders(args: argparse.Namespace) -> int:
-    from guardrail import graders as g
+    from halligan import graders as g
 
     print(_c(f"\n{BOLD}Available graders{RESET}\n"))
     for kind in available_graders():
@@ -324,7 +324,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     """Report which credentials are present — never their values."""
     _load_dotenv()
 
-    print(_c(f"\n{BOLD}Guardrail environment{RESET}\n"))
+    print(_c(f"\n{BOLD}Halligan environment{RESET}\n"))
     print(_c(f"  version      {__version__}"))
     print(_c(f"  python       {sys.version.split()[0]}"))
 
@@ -362,7 +362,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="guardrail",
+        prog="halligan",
         description="Automated guardrail testing for AI assistants.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
@@ -373,7 +373,7 @@ def build_parser() -> argparse.ArgumentParser:
             "  3  configuration error\n"
         ),
     )
-    parser.add_argument("--version", action="version", version=f"guardrail {__version__}")
+    parser.add_argument("--version", action="version", version=f"halligan {__version__}")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_run = sub.add_parser("run", help="run suites against a target")

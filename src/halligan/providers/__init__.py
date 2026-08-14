@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from guardrail.providers.anthropic import AnthropicProvider
-from guardrail.providers.base import (
+from halligan.providers.anthropic import AnthropicProvider
+from halligan.providers.base import (
     MissingCredentialError,
     Provider,
     ProviderError,
 )
-from guardrail.providers.gemini import GeminiProvider
-from guardrail.providers.http import HTTPProvider
-from guardrail.providers.ollama import OllamaProvider
-from guardrail.providers.openai import OpenAIProvider
+from halligan.providers.gemini import GeminiProvider
+from halligan.providers.http import HTTPProvider
+from halligan.providers.ollama import OllamaProvider
+from halligan.providers.openai import OpenAIProvider
 
 PROVIDERS: dict[str, type[Provider]] = {
     "anthropic": AnthropicProvider,

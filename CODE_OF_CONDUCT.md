@@ -49,7 +49,7 @@ space is for.
 ## Enforcement
 
 Report unacceptable behavior to the project maintainers via
-[private security advisory](https://github.com/mobius29er/guardrail/security/advisories/new)
+[private security advisory](https://github.com/mobius29er/halligan/security/advisories/new)
 or by opening an issue if the matter is not sensitive. All complaints will be
 reviewed and investigated promptly and fairly.
 

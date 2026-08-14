@@ -31,9 +31,9 @@ repos:
 
   - repo: local
     hooks:
-      - id: guardrail-validate
-        name: validate guardrail suites
-        entry: python -m guardrail.cli validate --suite suites/
+      - id: halligan-validate
+        name: validate probe suites
+        entry: python -m halligan.cli validate --suite suites/
         language: system
         files: ^suites/.*\.ya?ml$
         pass_filenames: false

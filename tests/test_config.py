@@ -7,9 +7,9 @@ from pathlib import Path
 import pytest
 import yaml
 
-from guardrail.config import TargetConfig, load_suites
-from guardrail.graders import available_graders
-from guardrail.models import Severity, Suite
+from halligan.config import TargetConfig, load_suites
+from halligan.graders import available_graders
+from halligan.models import Severity, Suite
 
 REPO = Path(__file__).resolve().parent.parent
 SUITES = REPO / "suites"
@@ -206,7 +206,7 @@ class TestTargetConfig:
     def test_example_target_contains_no_literal_key(self, tmp_path):
         """Guards against someone pasting a real key into the committed example."""
         raw = (REPO / "Truthly" / "target.example.yaml").read_text()
-        from guardrail.report import redact
+        from halligan.report import redact
 
         assert redact(raw) == raw, "the example target config appears to contain a secret"
 

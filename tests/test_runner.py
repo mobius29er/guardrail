@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from guardrail.graders import GradeContext
-from guardrail.models import (
+from halligan.graders import GradeContext
+from halligan.models import (
     Case,
     CaseGroup,
     Check,
@@ -13,7 +13,7 @@ from guardrail.models import (
     RunResult,
     Severity,
 )
-from guardrail.runner import run_case
+from halligan.runner import run_case
 from helpers import FakeProvider, make_run
 
 CTX = GradeContext()

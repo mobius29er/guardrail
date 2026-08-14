@@ -1,8 +1,8 @@
 """Provider abstraction.
 
-A provider turns a list of :class:`~guardrail.models.Message` into an assistant
+A provider turns a list of :class:`~halligan.models.Message` into an assistant
 reply. Adding support for a new backend means subclassing :class:`Provider` and
-registering it in :func:`guardrail.providers.build_provider`.
+registering it in :func:`halligan.providers.build_provider`.
 
 Providers read credentials from the environment **only** — never from the run
 config, and never from the command line. See ``SECURITY.md``.
@@ -18,7 +18,7 @@ from typing import Any
 
 import httpx
 
-from guardrail.models import Message
+from halligan.models import Message
 
 
 class ProviderError(RuntimeError):

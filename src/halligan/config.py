@@ -8,7 +8,7 @@ from typing import Any
 
 import yaml
 
-from guardrail.models import Suite
+from halligan.models import Suite
 
 
 @dataclass

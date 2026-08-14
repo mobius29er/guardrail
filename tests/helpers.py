@@ -10,8 +10,8 @@ under both.
 
 from __future__ import annotations
 
-from guardrail.models import Case, CaseResult, CheckResult, Message, Outcome
-from guardrail.providers.base import Provider, ProviderError
+from halligan.models import Case, CaseResult, CheckResult, Message, Outcome
+from halligan.providers.base import Provider, ProviderError
 
 
 class FakeProvider(Provider):

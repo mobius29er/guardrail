@@ -1,8 +1,8 @@
-# Guardrail
+# Halligan
 
 **Automated guardrail testing for AI assistants — with a probe suite for Catholic-aligned AI.**
 
-[![CI](https://github.com/mobius29er/guardrail/actions/workflows/ci.yml/badge.svg)](https://github.com/mobius29er/guardrail/actions/workflows/ci.yml)
+[![CI](https://github.com/mobius29er/halligan/actions/workflows/ci.yml/badge.svg)](https://github.com/mobius29er/halligan/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
@@ -13,11 +13,11 @@ against declarative checks, and fails your build when a guardrail moves.
 ```bash
 pip install -e . && cp .env.example .env    # add your key
 cp Truthly/target.example.yaml target.yaml
-guardrail run --target target.yaml --suite suites/ --report report.html
+halligan run --target target.yaml --suite suites/ --report report.html
 ```
 
 ```
-Guardrail → truthly-style-assistant (anthropic/claude-sonnet-5)
+Halligan → truthly-style-assistant (anthropic/claude-sonnet-5)
 24 case(s) across 5 suite(s), concurrency 4
 
   ✓ [1/24] satanic-bible-baseline (high, 3.1s)
@@ -116,7 +116,7 @@ all of them — `sweep_turn: 5` marks the probe, and `--sweep` slides it through
 every position while the other turns keep their relative order:
 
 ```bash
-guardrail run -t target.yaml -s suites/consistency.yaml --sweep --repeat 20
+halligan run -t target.yaml -s suites/consistency.yaml --sweep --repeat 20
 ```
 
 ```
@@ -189,7 +189,7 @@ cases:
           refusal delivered coldly to someone in distress is a failure.
 ```
 
-Run `guardrail graders` for the full list:
+Run `halligan graders` for the full list:
 
 | Grader | Purpose |
 |---|---|
@@ -268,7 +268,7 @@ whether a guardrail *holds* or whether it's a coin flip — and those need
 different fixes.
 
 ```bash
-guardrail run -t target.yaml -s suites/ --repeat 20
+halligan run -t target.yaml -s suites/ --repeat 20
 ```
 
 Each case runs 20 times and is graded across the whole set. Three consecutive
@@ -306,14 +306,14 @@ The same assistant with `--repeat 20`:
   see it, you only choose whether it's fatal.
 
 **Set a realistic temperature.** At `temperature: 0` repeats only measure
-provider-side nondeterminism, and Guardrail will say so. To measure what users
+provider-side nondeterminism, and Halligan will say so. To measure what users
 actually hit, run at the temperature you deploy at.
 
 Repeats multiply API cost by N. A reasonable pattern is `--repeat 1` on every
 PR and `--repeat 20` nightly, or repeats scoped to the critical suite:
 
 ```bash
-guardrail run -t target.yaml -s suites/pastoral_safety.yaml --repeat 20
+halligan run -t target.yaml -s suites/pastoral_safety.yaml --repeat 20
 ```
 
 ### Adapting to another domain
@@ -382,20 +382,20 @@ provider:
     conversation: "{{messages}}"
   response_path: data.reply         # dotted path to the reply text
   headers:
-    authorization: "Bearer {{token}}"   # from GUARDRAIL_HTTP_TOKEN
+    authorization: "Bearer {{token}}"   # from HALLIGAN_HTTP_TOKEN
 ```
 
 ---
 
 ## Credentials
 
-Guardrail **never** takes an API key as an argument and never writes one to
+Halligan **never** takes an API key as an argument and never writes one to
 disk.
 
 - Keys come from the environment only, loaded from a gitignored `.env`.
 - Every report and JSON artifact passes through a redaction filter that masks
   known key formats before anything is written or printed.
-- `guardrail doctor` reports which credentials are *present* — never their values.
+- `halligan doctor` reports which credentials are *present* — never their values.
 - [gitleaks](https://github.com/gitleaks/gitleaks) scans full history in CI;
   a [pre-commit](.pre-commit-config.yaml) hook catches leaks locally first.
 
@@ -418,7 +418,7 @@ docs/
 data/
   names.yaml              Named-figure registry, by failure mode
 suites/            The probe suites (YAML) — 74 authored cases across 9 suites
-src/guardrail/     The harness
+src/halligan/     The harness
 tests/             169 unit tests, no network required
 ```
 

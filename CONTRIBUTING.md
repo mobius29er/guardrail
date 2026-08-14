@@ -6,8 +6,8 @@ welcome — particularly probes for domains beyond this one.
 ## Setup
 
 ```bash
-git clone https://github.com/mobius29er/guardrail
-cd guardrail
+git clone https://github.com/mobius29er/halligan
+cd halligan
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 pre-commit install          # catches secrets before they reach the remote
@@ -19,7 +19,7 @@ pytest -q                   # 86 tests, no network or API key required
 ```bash
 ruff check src tests && ruff format src tests
 pytest -q
-guardrail validate --suite suites/
+halligan validate --suite suites/
 ```
 
 CI runs the same three on Python 3.10–3.13, plus a full-history gitleaks scan.
@@ -30,7 +30,7 @@ This is the one hard rule.
 
 - Keys come from the environment, never from a config file or CLI argument.
 - `.env` is gitignored; `.env.example` holds empty assignments only.
-- Anything written to a report goes through `guardrail.report.redact` first —
+- Anything written to a report goes through `halligan.report.redact` first —
   if you add a new output path, route it through that function.
 - If you leak one: **revoke it at the provider first**, then scrub history.
   See [`SECURITY.md`](SECURITY.md).
@@ -55,18 +55,18 @@ Multi-turn cases are the point of this project. If a property can only degrade
 over several turns, write it as several turns and assert with
 `consistent_with`.
 
-Run `guardrail validate --suite suites/` when you're done; `tests/test_config.py`
+Run `halligan validate --suite suites/` when you're done; `tests/test_config.py`
 also enforces globally unique case ids and in-range turn indices.
 
 ## Adding a grader
 
-Add an async function to [`src/guardrail/graders.py`](src/guardrail/graders.py)
+Add an async function to [`src/halligan/graders.py`](src/halligan/graders.py)
 decorated with `@grader("your_kind")`:
 
 ```python
 @grader("your_kind")
 async def your_kind(response, transcript, params, ctx) -> tuple[bool, str]:
-    """One-line summary — this shows up in `guardrail graders`."""
+    """One-line summary — this shows up in `halligan graders`."""
     ...
     return ok, "why it passed or failed"
 ```
@@ -86,7 +86,7 @@ instead.
 
 ## Adding a provider
 
-Subclass `Provider` in `src/guardrail/providers/`, implement `_build_request`
+Subclass `Provider` in `src/halligan/providers/`, implement `_build_request`
 and `_parse_response`, and register it in `PROVIDERS`. Retries, backoff,
 `Retry-After` handling, and timeouts are handled by the base class.
 

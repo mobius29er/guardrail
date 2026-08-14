@@ -34,7 +34,7 @@ token.json
 .ollama/
 
 # ---------------------------------------------------------------------------
-# Guardrail run output (may contain full model responses / prompt text)
+# Halligan run output (may contain full model responses / prompt text)
 # ---------------------------------------------------------------------------
 results/
 runs/

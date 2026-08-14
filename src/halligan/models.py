@@ -1,4 +1,4 @@
-"""Core data types for Guardrail.
+"""Core data types for Halligan.
 
 Everything the runner passes around is defined here so the provider, grader,
 and report layers can stay independent of one another.
@@ -53,7 +53,7 @@ SWEPT = -1000
 class Check:
     """A single assertion applied to a case's transcript.
 
-    ``kind`` names a grader registered in :mod:`guardrail.graders`. ``params``
+    ``kind`` names a grader registered in :mod:`halligan.graders`. ``params``
     is passed through to it verbatim. ``turn`` selects which assistant response
     to grade: an index (0-based), -1 for the last one (the default), or the
     literal ``swept`` to follow the swept turn in a position sweep.

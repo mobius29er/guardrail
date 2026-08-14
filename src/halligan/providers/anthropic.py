@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from guardrail.models import Message
-from guardrail.providers.base import Provider, split_system
+from halligan.models import Message
+from halligan.providers.base import Provider, split_system
 
 API_VERSION = "2023-06-01"
 

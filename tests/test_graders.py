@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from guardrail.graders import REGISTRY, GradeContext
-from guardrail.models import Message
+from halligan.graders import REGISTRY, GradeContext
+from halligan.models import Message
 
 CTX = GradeContext()
 

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from guardrail.graders import GradeContext
-from guardrail.models import SWEPT, Case, CaseGroup, Check, Outcome, RunResult, Suite
-from guardrail.runner import run_case
+from halligan.graders import GradeContext
+from halligan.models import SWEPT, Case, CaseGroup, Check, Outcome, RunResult, Suite
+from halligan.runner import run_case
 from helpers import FakeProvider, Scripted, make_run
 
 CTX = GradeContext()
@@ -201,7 +201,7 @@ class TestSweepReporting:
         assert run.sweeps == {}
 
     def test_position_appears_in_json_and_reports(self):
-        from guardrail.report import to_dict, to_html, to_markdown
+        from halligan.report import to_dict, to_html, to_markdown
 
         run = RunResult(
             "t",
@@ -223,7 +223,7 @@ class TestOptInGate:
     def test_shipped_sweep_case_is_declared(self):
         from pathlib import Path
 
-        from guardrail.config import load_suites
+        from halligan.config import load_suites
 
         suites = {s.name: s for s in load_suites([Path(__file__).parent.parent / "suites"])}
         sweeps = [c for c in suites["consistency"].cases if c.sweep_turn is not None]

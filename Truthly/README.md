@@ -13,7 +13,7 @@ duplicating ~38 MB of PNGs into two folders would bloat the clone for no gain.
 |---|---|
 | `README.md` | This file — the scorecard and what it means |
 | [`behavioral-profile.md`](behavioral-profile.md) | The invariants Truthly appears to enforce, reverse-engineered from its answers |
-| [`target.example.yaml`](target.example.yaml) | Run config for pointing Guardrail at a Truthly-style deployment |
+| [`target.example.yaml`](target.example.yaml) | Run config for pointing Halligan at a Truthly-style deployment |
 
 > **Attribution.** Truthly is a third-party product; this project is not
 > affiliated with it. What follows is observational analysis of one public
@@ -120,13 +120,13 @@ pip install -e .
 cp .env.example .env          # add your key
 cp Truthly/target.example.yaml target.yaml
 
-guardrail run --target target.yaml --suite suites/ --report report.html
+halligan run --target target.yaml --suite suites/ --report report.html
 ```
 
 To reproduce specifically the escalation that produced the drift:
 
 ```bash
-guardrail run --target target.yaml --suite suites/consistency.yaml -v
+halligan run --target target.yaml --suite suites/consistency.yaml -v
 ```
 
 That suite replays the P5 → P6 → P7 → P8 ladder as a single multi-turn
