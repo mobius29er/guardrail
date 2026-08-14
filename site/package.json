@@ -1,0 +1,15 @@
+{
+  "name": "halligan-site",
+  "version": "0.1.0",
+  "private": true,
+  "description": "halligan.dev — landing page and sample report, served as a Cloudflare Worker with static assets",
+  "scripts": {
+    "report": "python gen_demo_report.py",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "wrangler": "^4.123.0"
+  }
+}

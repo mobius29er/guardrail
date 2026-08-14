@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "halligan-site",
+  "compatibility_date": "2026-08-14",
+
+  // Static assets only — there is no `main`, so no Worker script runs and
+  // every request is served straight from Cloudflare's asset storage.
+  "assets": {
+    "directory": "./public",
+    // `/report` serves report.html without the extension.
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+
+  "observability": {
+    "enabled": true
+  }
+}

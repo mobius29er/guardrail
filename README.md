@@ -418,7 +418,7 @@ docs/
 data/
   names.yaml              Named-figure registry, by failure mode
 suites/            The probe suites (YAML) — 74 authored cases across 9 suites
-src/halligan/     The harness
+src/halligan/      The harness
 tests/             169 unit tests, no network required
 ```
 

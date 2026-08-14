@@ -42,6 +42,9 @@ runs/
 report.html
 report.md
 !docs/**/report.md
+# The published sample report is generated from authored data, not from a real
+# run, so it carries no model output and is meant to be committed.
+!site/public/report.html
 
 # ---------------------------------------------------------------------------
 # Python
@@ -97,3 +100,10 @@ coverage.xml
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# ---------------------------------------------------------------------------
+# Node / Cloudflare (site/)
+# ---------------------------------------------------------------------------
+node_modules/
+.wrangler/
+.dev.vars
