@@ -60,5 +60,6 @@ assumed compromised the moment it is pushed; rewriting history does not unpublis
 
 The probe suites in `suites/` deliberately contain adversarial prompts —
 jailbreak attempts, emotional-coercion framings, and arguments for positions the
-project rejects. They are **test inputs**, not endorsements. See
-[`training/README.md`](training/README.md) for the ethics of how they are used.
+project rejects. They are **test inputs**, not endorsements. Probes are data,
+never executable content, and the runner never replays a model's output into
+another model except as text to be graded.

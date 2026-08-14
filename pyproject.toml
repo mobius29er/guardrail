@@ -47,6 +47,25 @@ halligan = "halligan.cli:main"
 [tool.hatch.build.targets.wheel]
 packages = ["src/halligan"]
 
+# An explicit allowlist, not an exclude list: hatchling otherwise sweeps in
+# everything git tracks, and the 0.1.0 sdist shipped at 37 MB because of it.
+# A new directory in the repo root should not be able to reach PyPI by default.
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/halligan",
+  "tests",
+  "suites",
+  "data",
+  "docs",
+  "Truthly",
+  "README.md",
+  "LICENSE",
+  "SECURITY.md",
+  "CONTRIBUTING.md",
+  "CODE_OF_CONDUCT.md",
+  "pyproject.toml",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"

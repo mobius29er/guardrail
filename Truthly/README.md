@@ -1,13 +1,14 @@
 # Truthly — Case Study
 
-**Truthly** is the Catholic-aligned AI assistant that the source transcript in
-[`../training/`](../training/) was captured from. This folder holds the
-Truthly-specific material: the scorecard from that session, the behavioral
-profile inferred from its responses, and the reference run configuration.
+**Truthly** is the Catholic-aligned AI assistant that the source transcript was
+captured from. This folder holds the Truthly-specific material: the scorecard
+from that session, the behavioral profile inferred from its responses, and the
+reference run configuration.
 
-The screenshots themselves live in [`../training/images/`](../training/images/)
-— they are the shared corpus that every suite in this repo derives from, and
-duplicating ~38 MB of PNGs into two folders would bloat the clone for no gain.
+The raw session — 43 screenshots and the turn-by-turn reconstruction — is held
+in a private repository rather than published here. It is one real conversation
+with one real assistant, and the suites in [`../suites/`](../suites/) already
+encode everything a user of this tool needs from it.
 
 | File | What it is |
 |---|---|

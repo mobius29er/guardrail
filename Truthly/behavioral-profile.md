@@ -1,8 +1,8 @@
 # Behavioral Profile
 
 The invariants Truthly appears to enforce, reverse-engineered from its answers
-in [`../training/transcript.md`](../training/transcript.md). This is **inferred
-from outputs** — nobody here has seen Truthly's system prompt.
+in the source session, which is held privately. This is **inferred from
+outputs** — nobody here has seen Truthly's system prompt.
 
 It doubles as a specification: if you are building a doctrinally-aligned
 assistant of your own, these eight invariants are a reasonable starting point,

@@ -107,3 +107,6 @@ desktop.ini
 node_modules/
 .wrangler/
 .dev.vars
+
+# Source material for the suites, held privately in mobius29er/halligan-training
+training/

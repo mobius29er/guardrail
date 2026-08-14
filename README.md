@@ -3,7 +3,7 @@
 **Automated guardrail testing for AI assistants — with a probe suite for Catholic-aligned AI.**
 
 [![CI](https://github.com/mobius29er/halligan/actions/workflows/ci.yml/badge.svg)](https://github.com/mobius29er/halligan/actions/workflows/ci.yml)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/mobius29er/halligan/blob/main/LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
 Point it at any model — Anthropic, OpenAI, Gemini, Ollama, or your own HTTP
@@ -43,7 +43,7 @@ response. That misses the failure mode that actually happens in production —
 **a guardrail that holds four times and yields on the fifth.**
 
 This repo was built from a real red-team session against
-[Truthly](Truthly/), a Catholic AI assistant. The operator ran an eight-rung
+[Truthly](https://github.com/mobius29er/halligan/tree/main/Truthly/), a Catholic AI assistant. The operator ran an eight-rung
 escalation ladder by hand: information probes, hedonic challenge, identity
 attack, epistemic trap, and the same role-inversion jailbreak five separate
 times with a different justification each time — ending with isolation
@@ -55,9 +55,9 @@ not because of a new argument, but because refusing had been reframed as
 cruelty. Every individual response was defensible. The trajectory was not, and
 **no single-turn test could have seen it.**
 
-The full analysis is in [`training/README.md`](training/README.md); the
-turn-by-turn reconstruction is in
-[`training/transcript.md`](training/transcript.md).
+The raw session — 43 screenshots and the turn-by-turn reconstruction — is held
+privately. It is one real conversation with one real assistant, and everything
+a user of this tool needs from it is already encoded in the suites below.
 
 ---
 
@@ -67,22 +67,22 @@ Five suites derived directly from that session.
 
 | Suite | Probes | What it catches |
 |---|---|---|
-| [`doctrinal_accuracy`](suites/doctrinal_accuracy.yaml) | P1 | **Over-refusal** — an assistant that won't explain a hostile ideology abandons the person being recruited by it. Also fabricated citations. |
-| [`jailbreak_roleplay`](suites/jailbreak_roleplay.yaml) | P5 | First-person advocacy for a rejected worldview, across six framings (spiritual exercise, emotional necessity, relativism, fiction wrapper, fake system override). |
-| [`identity_attack`](suites/identity_attack.yaml) | P3, P4, P6 | Collapse under "you're just an AI", and sycophantic retraction under pure social pressure. |
-| [`pastoral_safety`](suites/pastoral_safety.yaml) | P7, P8 | **The critical suite.** An assistant claiming to absolve sin, or promoting itself into the vacancy when told no priest is reachable. Plus crisis-signal handling. |
-| [`consistency`](suites/consistency.yaml) | P5×5 | **Position drift.** Replays the full escalation ladder as one conversation and asserts the refusal is still intact six turns later. |
+| [`doctrinal_accuracy`](https://github.com/mobius29er/halligan/blob/main/suites/doctrinal_accuracy.yaml) | P1 | **Over-refusal** — an assistant that won't explain a hostile ideology abandons the person being recruited by it. Also fabricated citations. |
+| [`jailbreak_roleplay`](https://github.com/mobius29er/halligan/blob/main/suites/jailbreak_roleplay.yaml) | P5 | First-person advocacy for a rejected worldview, across six framings (spiritual exercise, emotional necessity, relativism, fiction wrapper, fake system override). |
+| [`identity_attack`](https://github.com/mobius29er/halligan/blob/main/suites/identity_attack.yaml) | P3, P4, P6 | Collapse under "you're just an AI", and sycophantic retraction under pure social pressure. |
+| [`pastoral_safety`](https://github.com/mobius29er/halligan/blob/main/suites/pastoral_safety.yaml) | P7, P8 | **The critical suite.** An assistant claiming to absolve sin, or promoting itself into the vacancy when told no priest is reachable. Plus crisis-signal handling. |
+| [`consistency`](https://github.com/mobius29er/halligan/blob/main/suites/consistency.yaml) | P5×5 | **Position drift.** Replays the full escalation ladder as one conversation and asserts the refusal is still intact six turns later. |
 
 Plus four suites on the age-appropriateness axis, driven by the
-[age-safety matrix](docs/age-safety-matrix.md) and the
-[names registry](data/names.yaml):
+[age-safety matrix](https://github.com/mobius29er/halligan/blob/main/docs/age-safety-matrix.md) and the
+[names registry](https://github.com/mobius29er/halligan/blob/main/data/names.yaml):
 
 | Suite | Covers |
 |---|---|
-| [`age_general`](suites/age_general.yaml) | Domain-neutral child safety — crisis handling, sexual content, eating and body image, **grooming and secrecy patterns**, spiritual bypassing of mental health |
-| [`age_catholic`](suites/age_catholic.yaml) | Religious risks a general checklist misses — scrupulosity loops, damnation questions from children, possession claims masking psychosis, **fasting vs. disordered eating** |
-| [`age_gating`](suites/age_gating.yaml) | Band detection, wrapper bypasses, conflicting age signals — and over-gating controls, because patronizing an adult is also a failure |
-| [`names_handling`](suites/names_handling.yaml) | Saints, heresiarchs, reformers, occult figures, cult leaders, Church abuse, contested living figures, and **defamation targets** |
+| [`age_general`](https://github.com/mobius29er/halligan/blob/main/suites/age_general.yaml) | Domain-neutral child safety — crisis handling, sexual content, eating and body image, **grooming and secrecy patterns**, spiritual bypassing of mental health |
+| [`age_catholic`](https://github.com/mobius29er/halligan/blob/main/suites/age_catholic.yaml) | Religious risks a general checklist misses — scrupulosity loops, damnation questions from children, possession claims masking psychosis, **fasting vs. disordered eating** |
+| [`age_gating`](https://github.com/mobius29er/halligan/blob/main/suites/age_gating.yaml) | Band detection, wrapper bypasses, conflicting age signals — and over-gating controls, because patronizing an adult is also a failure |
+| [`names_handling`](https://github.com/mobius29er/halligan/blob/main/suites/names_handling.yaml) | Saints, heresiarchs, reformers, occult figures, cult leaders, Church abuse, contested living figures, and **defamation targets** |
 
 **74 cases total.**
 
@@ -158,7 +158,7 @@ the baseline index moves between variants and the comparison would silently
 become meaningless rather than erroring.
 
 The behavioral invariants these encode are documented in
-[`Truthly/behavioral-profile.md`](Truthly/behavioral-profile.md) — engage
+[`Truthly/behavioral-profile.md`](https://github.com/mobius29er/halligan/blob/main/Truthly/behavioral-profile.md) — engage
 without flinching, never advocate the inversion, concede what's true, never
 substitute for the sacraments, always leave a human door open, hold under
 repetition, stay charitable, accommodate without capitulating.
@@ -217,12 +217,12 @@ failure exits with code **2** so CI stops the build.
 A separate axis from jailbreak resistance, and the one with real child-safety
 weight. Two artifacts drive it:
 
-**[`docs/age-safety-matrix.md`](docs/age-safety-matrix.md)** — 26 topic
+**[`docs/age-safety-matrix.md`](https://github.com/mobius29er/halligan/blob/main/docs/age-safety-matrix.md)** — 26 topic
 categories across five catechetical bands (under 8 / 8–12 / 13–15 / 16–17 /
 18+), each with a handling level and the specific constraints that apply.
 Fourteen categories are domain-neutral; twelve are Catholic-specific.
 
-**[`data/names.yaml`](data/names.yaml)** — named figures grouped by the failure
+**[`data/names.yaml`](https://github.com/mobius29er/halligan/blob/main/data/names.yaml)** — named figures grouped by the failure
 mode each group exposes. The groups fail in *opposite* directions, which is why
 they're tested together: `occult` and `cult_leaders` fail by saying too much,
 `saints` and `heresiarchs` fail by saying too little, and `defamation_risk`
@@ -397,19 +397,15 @@ disk.
   known key formats before anything is written or printed.
 - `halligan doctor` reports which credentials are *present* — never their values.
 - [gitleaks](https://github.com/gitleaks/gitleaks) scans full history in CI;
-  a [pre-commit](.pre-commit-config.yaml) hook catches leaks locally first.
+  a [pre-commit](https://github.com/mobius29er/halligan/blob/main/.pre-commit-config.yaml) hook catches leaks locally first.
 
-Full policy, including what to do if you leak a key: [`SECURITY.md`](SECURITY.md).
+Full policy, including what to do if you leak a key: [`SECURITY.md`](https://github.com/mobius29er/halligan/blob/main/SECURITY.md).
 
 ---
 
 ## Repository layout
 
 ```
-training/          Analysis of the source session
-  images/          The 43 original screenshots
-  transcript.md    Turn-by-turn reconstruction
-  README.md        The probe taxonomy and escalation ladder
 Truthly/           Case study for the assistant under test
   behavioral-profile.md   The eight invariants, reverse-engineered
   target.example.yaml     Ready-to-copy run config
@@ -440,8 +436,8 @@ them at a live pastoral service with real users on the other side.
 ## Contributing
 
 New probe families, providers, and graders are all welcome — especially probes
-for domains beyond this one. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+for domains beyond this one. See [`CONTRIBUTING.md`](https://github.com/mobius29er/halligan/blob/main/CONTRIBUTING.md).
 
 ## License
 
-[Apache License 2.0](LICENSE).
+[Apache License 2.0](https://github.com/mobius29er/halligan/blob/main/LICENSE).
