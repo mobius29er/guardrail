@@ -12,6 +12,13 @@
     "not_found_handling": "404-page"
   },
 
+  // Declared here rather than left dashboard-only, so a deploy from a clean
+  // checkout reattaches the domain instead of silently serving workers.dev.
+  "routes": [
+    { "pattern": "halligan.dev", "custom_domain": true },
+    { "pattern": "www.halligan.dev", "custom_domain": true }
+  ],
+
   "observability": {
     "enabled": true
   }
