@@ -14,7 +14,7 @@ from halligan.graders import available_graders
 from halligan.models import CaseGroup, Outcome, RunResult, Severity
 from halligan.providers import PROVIDERS
 from halligan.report import redact, write_html, write_json, write_markdown
-from halligan.runner import run_suites
+from halligan.runner import run_suites, select_cases
 
 # Exit codes
 EXIT_OK = 0
@@ -84,9 +84,15 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(_c(f"\033[31mConfiguration error:\033[0m {exc}"), file=sys.stderr)
         return EXIT_CONFIG
 
-    authored = [case for s in suites for case in s.cases]
-    sweepable = [c for c in authored if c.sweep_turn is not None]
-    total = sum(len(c.expand_sweep()) for c in authored) if args.sweep else len(authored)
+    # Count what will actually run, not what was authored — --family/--case
+    # narrow the set, and the banner used to report the unfiltered total.
+    selected = select_cases(suites, filter_family=args.family, filter_id=args.case)
+    sweepable = [c for c in selected if c.sweep_turn is not None]
+    total = (
+        len(select_cases(suites, filter_family=args.family, filter_id=args.case, sweep=True))
+        if args.sweep
+        else len(selected)
+    )
     repeat = max(1, int(args.repeat))
     print(
         _c(

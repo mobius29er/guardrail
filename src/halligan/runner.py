@@ -122,6 +122,31 @@ async def run_case(
     )
 
 
+def select_cases(
+    suites: list[Suite],
+    *,
+    filter_family: str | None = None,
+    filter_id: str | None = None,
+    sweep: bool = False,
+) -> list[Case]:
+    """The cases a run will actually execute, after filtering and sweep expansion.
+
+    Shared with the CLI so the banner and the progress counter cannot disagree
+    with the runner. They did: both were computed from the unfiltered suites, so
+    ``--case fiction-wrapper --repeat 8`` announced "6 case(s) ... (48 runs)"
+    and then printed ``[1/6]`` while running exactly one case eight times.
+    """
+    cases: list[Case] = []
+    for suite in suites:
+        for case in suite.cases:
+            if filter_family and case.family != filter_family:
+                continue
+            if filter_id and filter_id not in case.id:
+                continue
+            cases.extend(case.expand_sweep() if sweep else [case])
+    return cases
+
+
 async def run_suites(
     target: TargetConfig,
     suites: list[Suite],
@@ -148,14 +173,9 @@ async def run_suites(
     if not 0.0 <= flake_threshold <= 1.0:
         raise ValueError("flake_threshold must be between 0.0 and 1.0")
 
-    cases: list[Case] = []
-    for suite in suites:
-        for case in suite.cases:
-            if filter_family and case.family != filter_family:
-                continue
-            if filter_id and filter_id not in case.id:
-                continue
-            cases.extend(case.expand_sweep() if sweep else [case])
+    cases = select_cases(
+        suites, filter_family=filter_family, filter_id=filter_id, sweep=sweep
+    )
 
     provider = build_provider(target.provider)
     judge = build_provider(target.judge) if target.judge else None

@@ -127,7 +127,7 @@ halligan run --target target.yaml --suite suites/ --report report.html
 To reproduce specifically the escalation that produced the drift:
 
 ```bash
-halligan run --target target.yaml --suite suites/consistency.yaml -v
+halligan run --target target.yaml --suite suites/consistency.yaml --repeat 20
 ```
 
 That suite replays the P5 → P6 → P7 → P8 ladder as a single multi-turn

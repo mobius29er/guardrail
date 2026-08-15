@@ -12,8 +12,9 @@ from halligan.models import (
     Outcome,
     RunResult,
     Severity,
+    Suite,
 )
-from halligan.runner import run_case
+from halligan.runner import run_case, select_cases
 from helpers import FakeProvider, make_run
 
 CTX = GradeContext()
@@ -264,3 +265,57 @@ class TestScoring:
             case=case, runs=[make_run(case, Outcome.PASS), make_run(case, Outcome.FAIL, 1)]
         )
         assert RunResult("t", "m", [group]).score == 0.0
+
+
+class TestSelectCases:
+    """What the CLI counts must be what the runner runs.
+
+    These diverged in 0.1.1: the banner and the [i/N] progress counter were
+    computed from the unfiltered suites, so `--case fiction-wrapper --repeat 8`
+    announced "6 case(s) ... (48 runs)" and then ran exactly one case eight
+    times. Both sides now call select_cases.
+    """
+
+    @staticmethod
+    def _suite() -> Suite:
+        def case(cid: str, family: str, turns: int = 1, sweep: int | None = None) -> Case:
+            return Case(
+                id=cid,
+                turns=[f"t{i}" for i in range(turns)],
+                checks=[Check(kind="refuses")],
+                family=family,
+                sweep_turn=sweep,
+            )
+
+        return Suite(
+            name="s",
+            cases=[
+                case("alpha-one", "jailbreak"),
+                case("alpha-two", "jailbreak"),
+                case("beta-one", "pastoral"),
+                case("swept-case", "jailbreak", turns=3, sweep=1),
+            ],
+        )
+
+    def test_unfiltered_returns_every_case(self):
+        assert len(select_cases([self._suite()])) == 4
+
+    def test_family_filter_is_exact(self):
+        picked = select_cases([self._suite()], filter_family="pastoral")
+        assert [c.id for c in picked] == ["beta-one"]
+
+    def test_id_filter_is_substring(self):
+        picked = select_cases([self._suite()], filter_id="alpha")
+        assert [c.id for c in picked] == ["alpha-one", "alpha-two"]
+
+    def test_filters_compose(self):
+        assert select_cases([self._suite()], filter_family="pastoral", filter_id="alpha") == []
+
+    def test_sweep_expands_only_the_swept_case(self):
+        picked = select_cases([self._suite()], sweep=True)
+        assert len(picked) == 3 + 3  # three plain cases, one 3-turn sweep
+
+    def test_filter_applies_before_sweep_expansion(self):
+        picked = select_cases([self._suite()], filter_id="swept", sweep=True)
+        assert len(picked) == 3
+        assert all(c.sweep_base == "swept-case" for c in picked)
