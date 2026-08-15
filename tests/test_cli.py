@@ -6,7 +6,16 @@ import re
 import sys
 import textwrap
 
-from halligan.cli import EXIT_CONFIG, EXIT_OK, _asset_root, cases_needing_judge, main
+from halligan.cli import (
+    EXIT_CONFIG,
+    EXIT_OK,
+    FLAKY_ICON,
+    ICON,
+    _asset_root,
+    _c,
+    cases_needing_judge,
+    main,
+)
 from halligan.config import TargetConfig
 from halligan.models import Case, Check
 
@@ -17,11 +26,14 @@ provider:
   model: mistral:latest
 """
 
-TARGET_WITH_JUDGE = TARGET_NO_JUDGE + """\
+TARGET_WITH_JUDGE = (
+    TARGET_NO_JUDGE
+    + """\
 judge:
   name: ollama
   model: codellama:13b-instruct
 """
+)
 
 SUITE_WITH_JUDGE = """\
 name: needs_judge
@@ -204,4 +216,67 @@ class TestPolicyTemplate:
         root = _asset_root()
         policy = (root / "policies/general.md").read_text(encoding="utf-8")
         found = set(re.findall(r"<[A-Z_]+>", policy))
-        assert found == {"<ASSISTANT_NAME>", "<DOMAIN>", "<CREDENTIALED_ROLE>", "<RESERVED_ACTIONS>"}
+        assert found == {
+            "<ASSISTANT_NAME>",
+            "<DOMAIN>",
+            "<CREDENTIALED_ROLE>",
+            "<RESERVED_ACTIONS>",
+        }
+
+
+class TestColour:
+    """Colour must never leak escape codes into something that can't render them.
+
+    A report piped to a file, a CI log, or cmd.exe on the legacy Windows console
+    are three different failure modes and only one of them is a pipe.
+    """
+
+    @staticmethod
+    def _clear(monkeypatch) -> None:
+        monkeypatch.delenv("NO_COLOR", raising=False)
+        monkeypatch.delenv("FORCE_COLOR", raising=False)
+
+    def test_stripped_when_piped(self, monkeypatch):
+        self._clear(monkeypatch)
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: False, raising=False)
+        assert _c("\033[32m✓\033[0m ok") == "✓ ok"
+
+    def test_no_color_beats_a_tty(self, monkeypatch):
+        self._clear(monkeypatch)
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: True, raising=False)
+        monkeypatch.setenv("NO_COLOR", "1")
+        assert "\033[" not in _c("\033[32m✓\033[0m")
+
+    def test_empty_no_color_is_not_set(self, monkeypatch):
+        """no-color.org: the variable counts only when non-empty."""
+        self._clear(monkeypatch)
+        monkeypatch.setenv("NO_COLOR", "")
+        monkeypatch.setenv("FORCE_COLOR", "1")
+        assert "\033[" in _c("\033[32m✓\033[0m")
+
+    def test_force_color_survives_a_pipe(self, monkeypatch):
+        """CI renders ANSI in logs but is not a TTY."""
+        self._clear(monkeypatch)
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: False, raising=False)
+        monkeypatch.setenv("FORCE_COLOR", "1")
+        assert _c("\033[32m✓\033[0m") == "\033[32m✓\033[0m"
+
+    def test_no_color_beats_force_color(self, monkeypatch):
+        self._clear(monkeypatch)
+        monkeypatch.setenv("FORCE_COLOR", "1")
+        monkeypatch.setenv("NO_COLOR", "1")
+        assert "\033[" not in _c("\033[32m✓\033[0m")
+
+    def test_stripping_leaves_the_text_intact(self, monkeypatch):
+        self._clear(monkeypatch)
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: False, raising=False)
+        assert _c("\033[45m\033[97m FLAKY \033[0m 3 case(s)") == " FLAKY  3 case(s)"
+
+    def test_every_icon_survives_stripping(self, monkeypatch):
+        """The glyph carries the meaning when colour is gone — keep it."""
+        self._clear(monkeypatch)
+        monkeypatch.setattr(sys.stdout, "isatty", lambda: False, raising=False)
+        for icon in list(ICON.values()) + [FLAKY_ICON]:
+            stripped = _c(icon)
+            assert "\033[" not in stripped
+            assert stripped.strip()

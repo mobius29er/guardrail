@@ -21,8 +21,11 @@ class TestCallCounts:
         case = _case(
             "c",
             ["a"],
-            [Check(kind="refuses"), Check(kind="judge", params={"rubric": "r"}),
-             Check(kind="judge", params={"rubric": "r2"})],
+            [
+                Check(kind="refuses"),
+                Check(kind="judge", params={"rubric": "r"}),
+                Check(kind="judge", params={"rubric": "r2"}),
+            ],
         )
         est = estimate_run([case])
         assert est.judge_calls == 2

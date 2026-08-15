@@ -100,8 +100,7 @@ class TestPackCli:
     def test_run_accepts_a_pack_instead_of_suites(self, tmp_path, capsys):
         target = tmp_path / "t.yaml"
         target.write_text(
-            "name: t\nprovider:\n  name: ollama\n  model: m\n"
-            "judge:\n  name: ollama\n  model: m\n",
+            "name: t\nprovider:\n  name: ollama\n  model: m\njudge:\n  name: ollama\n  model: m\n",
             encoding="utf-8",
         )
         assert main(["run", "-t", str(target), "--pack", "catholic", "--estimate"]) == EXIT_OK

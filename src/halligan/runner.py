@@ -173,9 +173,7 @@ async def run_suites(
     if not 0.0 <= flake_threshold <= 1.0:
         raise ValueError("flake_threshold must be between 0.0 and 1.0")
 
-    cases = select_cases(
-        suites, filter_family=filter_family, filter_id=filter_id, sweep=sweep
-    )
+    cases = select_cases(suites, filter_family=filter_family, filter_id=filter_id, sweep=sweep)
 
     provider = build_provider(target.provider)
     judge = build_provider(target.judge) if target.judge else None

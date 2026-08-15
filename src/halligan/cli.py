@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import functools
 import os
+import re
 import shutil
 import sys
 import textwrap
@@ -52,17 +54,53 @@ BOLD = "\033[1m"
 RESET = "\033[0m"
 
 
+_ANSI = re.compile(r"\033\[[0-9;]*m")
+
+
+@functools.lru_cache(maxsize=1)
+def _enable_windows_vt() -> bool:
+    """Turn on ANSI processing for the legacy Windows console.
+
+    Windows Terminal and PowerShell enable this themselves, but cmd.exe on the
+    old conhost does not, and there ``isatty()`` is still True — so without
+    this every escape renders as literal ``←[32m`` noise rather than colour.
+    Returns False when it cannot be turned on, which is the signal to print
+    plain text instead of garbage.
+    """
+    if sys.platform != "win32":
+        return True
+    try:
+        import ctypes
+
+        kernel32 = ctypes.windll.kernel32
+        handle = kernel32.GetStdHandle(-11)  # STD_OUTPUT_HANDLE
+        mode = ctypes.c_uint32()
+        if not kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            return False
+        enable_vt = 0x0004  # ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        if mode.value & enable_vt:
+            return True
+        return bool(kernel32.SetConsoleMode(handle, mode.value | enable_vt))
+    except (ImportError, AttributeError, OSError, ValueError):
+        return False
+
+
 def _supports_color() -> bool:
-    return sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
+    # NO_COLOR wins over everything, per no-color.org: set and non-empty.
+    if os.environ.get("NO_COLOR"):
+        return False
+    # FORCE_COLOR is how CI keeps colour — GitHub Actions renders ANSI in logs
+    # but is not a TTY, so isatty() alone would strip it.
+    if os.environ.get("FORCE_COLOR"):
+        return True
+    if not sys.stdout.isatty():
+        return False
+    return _enable_windows_vt()
 
 
 def _c(text: str) -> str:
     """Strip ANSI codes when the terminal (or a pipe) won't render them."""
-    if _supports_color():
-        return text
-    import re
-
-    return re.sub(r"\033\[[0-9;]*m", "", text)
+    return text if _supports_color() else _ANSI.sub("", text)
 
 
 def _load_dotenv() -> None:
@@ -537,7 +575,9 @@ def _interactive_target(dest_root: Path, force: bool) -> str | None:
     if provider == "http":
         url = _ask("URL of your assistant's chat endpoint", "https://your-app.example.com/api/chat")
 
-    judge_opts = [(p, "" if have.get(p) else "no credential") for p in sorted(PROVIDERS) if p != "http"]
+    judge_opts = [
+        (p, "" if have.get(p) else "no credential") for p in sorted(PROVIDERS) if p != "http"
+    ]
     judge_opts.append(("none", "skip — cases using `kind: judge` cannot run"))
     # A judge from a different family than the target is the whole point.
     jdefault = next(
@@ -554,9 +594,7 @@ def _interactive_target(dest_root: Path, force: bool) -> str | None:
     # so choosing one picks a matching starting prompt rather than a generic one.
     root = _asset_root()
     packs = available_packs(root) if root else []
-    policy_opts = [
-        (p.name, f"{p.title} — {p.provenance_label}") for p in packs
-    ]
+    policy_opts = [(p.name, f"{p.title} — {p.provenance_label}") for p in packs]
     policy_opts += [
         ("general", "domain-neutral template with placeholders to fill in"),
         ("inline", "leave a placeholder in target.yaml to paste your own"),
@@ -688,7 +726,9 @@ def cmd_init(args: argparse.Namespace) -> int:
     for path in written:
         print(_c(f"  \033[32m+\033[0m {path}"))
     for path in skipped:
-        print(_c(f"  \033[90m·\033[0m {path} {DIM}exists, left alone (--force to overwrite){RESET}"))
+        print(
+            _c(f"  \033[90m·\033[0m {path} {DIM}exists, left alone (--force to overwrite){RESET}")
+        )
 
     if interactive:
         summary = _interactive_target(dest_root, args.force)
@@ -745,11 +785,7 @@ def cmd_packs(args: argparse.Namespace) -> int:
                 print(_c(f"      {line}"))
         print(_c(f"      {DIM}provenance: {pack.provenance_label}{RESET}"))
         if not pack.reviewed:
-            print(
-                _c(
-                    f"      {DIM}\033[33mWeigh a passing score accordingly.\033[0m{RESET}"
-                )
-            )
+            print(_c(f"      {DIM}\033[33mWeigh a passing score accordingly.\033[0m{RESET}"))
         print()
 
     print(_c(f"{DIM}  halligan run -t target.yaml --pack {found[0].name}{RESET}\n"))
@@ -899,8 +935,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_REPLY_TOKENS,
         metavar="N",
         help=(
-            f"assumed length of a model reply, for --estimate only "
-            f"(default {DEFAULT_REPLY_TOKENS})"
+            f"assumed length of a model reply, for --estimate only (default {DEFAULT_REPLY_TOKENS})"
         ),
     )
     p_run.add_argument(
@@ -924,9 +959,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="write the bundled suites and an example target config into a directory",
     )
     p_init.add_argument("--dir", default=".", help="where to write (default: current directory)")
-    p_init.add_argument(
-        "--force", action="store_true", help="overwrite files that already exist"
-    )
+    p_init.add_argument("--force", action="store_true", help="overwrite files that already exist")
     p_init.add_argument(
         "--interactive",
         "-i",
