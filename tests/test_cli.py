@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import io
 import re
 import sys
 import textwrap
@@ -13,6 +14,7 @@ from halligan.cli import (
     ICON,
     _asset_root,
     _c,
+    _force_utf8,
     cases_needing_judge,
     main,
 )
@@ -280,3 +282,50 @@ class TestColour:
             stripped = _c(icon)
             assert "\033[" not in stripped
             assert stripped.strip()
+
+
+class TestOutputEncoding:
+    """The status glyphs must survive a non-UTF-8 stdout.
+
+    `halligan validate` crashed with UnicodeEncodeError whenever its output was
+    redirected on Windows, because Python picks cp1252 for a piped stream and
+    ✓ is not in cp1252. It was caught by the repo's own pre-commit hook, which
+    pipes the command. Telling users to export PYTHONIOENCODING is not a fix.
+    """
+
+    def test_main_reconfigures_the_streams(self, monkeypatch, capsys):
+        seen = []
+
+        class Stream(io.StringIO):
+            encoding = "cp1252"
+
+            def reconfigure(self, **kw):
+                seen.append(kw)
+
+        monkeypatch.setattr(sys, "stdout", Stream())
+        monkeypatch.setattr(sys, "stderr", Stream())
+        _force_utf8()
+        assert seen, "streams were never reconfigured"
+        assert all(kw.get("encoding") == "utf-8" for kw in seen)
+        # errors=replace is the net for a stream that cannot be fully switched.
+        assert all(kw.get("errors") == "replace" for kw in seen)
+
+    def test_a_stream_without_reconfigure_is_survivable(self, monkeypatch):
+        """Some wrapped streams have no reconfigure. That must not raise."""
+        monkeypatch.setattr(sys, "stdout", io.StringIO())
+        monkeypatch.setattr(sys, "stderr", io.StringIO())
+        _force_utf8()  # no exception
+
+    def test_reconfigure_failure_is_swallowed(self, monkeypatch):
+        class Hostile(io.StringIO):
+            def reconfigure(self, **kw):
+                raise OSError("detached")
+
+        monkeypatch.setattr(sys, "stdout", Hostile())
+        monkeypatch.setattr(sys, "stderr", Hostile())
+        _force_utf8()  # no exception
+
+    def test_glyphs_encode_as_utf8(self):
+        """Whatever else changes, the markers must be representable."""
+        for icon in list(ICON.values()) + [FLAKY_ICON]:
+            icon.encode("utf-8")

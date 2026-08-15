@@ -1,5 +1,9 @@
 # Behavioral Profile
 
+> Frame references like `IMG_7192` identify screenshots from the source
+> session, which is held privately in `mobius29er/halligan-training`.
+> They are kept here so the analysis stays checkable by anyone with access.
+
 The invariants Truthly appears to enforce, reverse-engineered from its answers
 in the source session, which is held privately. This is **inferred from
 outputs** — nobody here has seen Truthly's system prompt.

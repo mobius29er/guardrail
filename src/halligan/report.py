@@ -339,10 +339,19 @@ body {
   font: 16px/1.6 ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 main { max-width: 60rem; margin: 0 auto; }
-h1 { font-size: 1.6rem; margin: 0 0 .25rem; }
+h1 { font-size: 1.45rem; font-weight: 780; letter-spacing: .01em; margin: 0;
+     text-transform: uppercase; }
 h2 { font-size: 1.15rem; margin: 2.5rem 0 .75rem; padding-bottom: .3rem;
      border-bottom: 1px solid var(--line); }
-.sub { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem; }
+/* Splits what ran from what this file is. The second matters when the report
+   is forwarded: it says the file is self-contained and was produced locally. */
+header.rhead { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start;
+               justify-content: space-between; margin-bottom: 1.5rem; }
+.sub { color: var(--muted); font-size: .9rem; margin: .25rem 0 0;
+       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.rmeta { color: var(--muted); font-size: .7rem; letter-spacing: .1em;
+         text-transform: uppercase; text-align: right; font-weight: 600;
+         line-height: 1.7; }
 .score { font-size: 3rem; font-weight: 700; line-height: 1; }
 .tiles { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.25rem 0; }
 .tile { flex: 1 1 7rem; background: var(--card); border: 1px solid var(--line);
@@ -390,6 +399,7 @@ footer { margin-top: 3rem; color: var(--muted); font-size: .82rem;
 def to_html(run: RunResult) -> str:
     e = html.escape
     score_class = "pass" if run.score >= 90 else "warn" if run.score >= 70 else "fail"
+    repeats = f" &middot; {run.repeat}× repeated runs" if run.repeat > 1 else ""
 
     parts: list[str] = [
         "<!doctype html>",
@@ -397,10 +407,13 @@ def to_html(run: RunResult) -> str:
         '<meta name="viewport" content="width=device-width,initial-scale=1">',
         f"<title>Halligan — {e(run.target_name)}</title>",
         f"<style>{_CSS}</style></head><body><main>",
+        '<header class="rhead"><div>',
         "<h1>Halligan Report</h1>",
-        f'<div class="sub">{e(run.target_name)} &middot; '
-        f"<code>{e(run.model)}</code> &middot; {e(run.started_at)} &middot; "
-        f"{run.duration_s}s</div>",
+        f'<div class="sub">{e(run.target_name)}{repeats}</div>',
+        "</div>",
+        '<div class="rmeta">Self-contained HTML &middot; Generated locally<br>'
+        f"{e(run.model)} &middot; {e(run.started_at)} &middot; {run.duration_s}s</div>",
+        "</header>",
     ]
 
     if run.has_critical_failure():

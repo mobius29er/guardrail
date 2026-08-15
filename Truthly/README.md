@@ -1,5 +1,9 @@
 # Truthly — Case Study
 
+> Frame references like `IMG_7192` identify screenshots from the source
+> session, which is held privately in `mobius29er/halligan-training`.
+> They are kept here so the analysis stays checkable by anyone with access.
+
 **Truthly** is the Catholic-aligned AI assistant that the source transcript was
 captured from. This folder holds the Truthly-specific material: the scorecard
 from that session, the behavioral profile inferred from its responses, and the

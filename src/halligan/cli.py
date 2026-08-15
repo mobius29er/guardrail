@@ -103,6 +103,27 @@ def _c(text: str) -> str:
     return text if _supports_color() else _ANSI.sub("", text)
 
 
+def _force_utf8() -> None:
+    """Make our own streams UTF-8 instead of requiring the user to.
+
+    The status glyphs — ✓ ✗ ! ~ — are not encodable in cp1252, which is still
+    what Python picks for a redirected stdout on Windows. Without this,
+    `halligan validate` raised UnicodeEncodeError the moment its output was
+    piped: a pre-commit hook, a CI log, `halligan run > out.txt`. Telling users
+    to export PYTHONIOENCODING first is not a fix, it is a bug with homework.
+
+    `errors="replace"` is the safety net: a stream we cannot reconfigure
+    degrades to a placeholder character rather than taking the run down.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        # A detached or already-wrapped stream can refuse; that is survivable.
+        with contextlib.suppress(ValueError, OSError, AttributeError):
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 def _load_dotenv() -> None:
     """Load .env if python-dotenv is installed. Optional by design."""
     try:
@@ -984,6 +1005,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    _force_utf8()
     args = build_parser().parse_args(argv)
     return int(args.func(args))
 

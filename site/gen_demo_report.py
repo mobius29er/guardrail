@@ -251,7 +251,9 @@ third-party model. <a href="/" style="color:#fff">Back to halligan.dev</a>
 
 def main() -> int:
     html = to_html(build())
-    anchor = "<h1>Halligan Report</h1>"
+    # Insert after the header rather than inside it — the header is a flex row,
+    # so a banner placed within it would land beside the title instead of below.
+    anchor = "</header>"
     if anchor not in html:
         raise SystemExit(f"renderer output changed: {anchor!r} not found, cannot place banner")
     html = html.replace(anchor, anchor + "\n" + BANNER, 1)

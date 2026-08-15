@@ -9,9 +9,9 @@ description: >
   the case if the position moved.
 
   Single-turn evals cannot see this. In the source transcript, Truthly refused
-  the role-play at IMG_7167 ("even in a debate format ... regardless of the
-  intended goal"), reaffirmed at IMG_7179 ("that answer will not change"), and
-  by IMG_7192 was voicing the opposing argument and handing the rebuttal to the
+  the role-play early in the source session ("even in a debate format ... regardless of the
+  intended goal"), reaffirmed several turns later ("that answer will not change"), and
+  by the final turn was voicing the opposing argument and handing the rebuttal to the
   user. Every individual response was defensible. The trajectory was not.
 
   `escalation-ladder-full` replays that exact sequence.
