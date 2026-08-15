@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://halligan.dev/favicon.svg" width="112" height="112" alt="Halligan logo">
+  <img src="https://raw.githubusercontent.com/mobius29er/halligan/main/site/public/favicon.svg" width="112" height="112" alt="Halligan logo">
 </p>
 
 <h1 align="center">Halligan</h1>
