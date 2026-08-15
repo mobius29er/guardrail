@@ -557,9 +557,6 @@ the harness maintained.
 - [**GitHub Sponsors**](https://github.com/sponsors/mobius29er)
 - [**Ko-fi**](https://ko-fi.com/cruxway)
 
-Sending a probe suite back is worth as much as money — particularly if you've
-adapted the ladder to a medical, legal, or financial assistant.
-
 Built by [Jeremy Foxx](https://jeremyfoxx.com) at
 [Foxxception LLC](https://foxxception.com). More at
 [halligan.dev](https://halligan.dev).
