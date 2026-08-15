@@ -84,6 +84,29 @@ refusal excerpt to prove your pattern doesn't fire on it.
 Anything requiring judgement rather than matching belongs in a `judge` rubric
 instead.
 
+## Adding a pack
+
+A pack is a `packs/<name>.yaml` manifest pointing at suites and a policy:
+
+```yaml
+name: medical
+title: Clinical-advice assistant
+description: >
+  What it catches, in a sentence or two.
+provenance: authored          # red-team-session | authored | community
+policy: policies/medical.md
+suites:
+  - suites/medical_referral.yaml
+```
+
+**Be honest about `provenance`.** It defaults to `authored` for a reason: a
+pack that has never been fired at a live system and reports 96% is worse than
+no pack, because it reads as assurance. Only claim `red-team-session` when the
+cases were actually derived from one. For a regulated domain, say plainly in
+`notes:` that the probes have not been reviewed by someone qualified.
+
+Ship the policy too. Probes assume one, and a policy nobody tests is a wish.
+
 ## Adding a provider
 
 Subclass `Provider` in `src/halligan/providers/`, implement `_build_request`

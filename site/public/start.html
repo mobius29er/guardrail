@@ -119,7 +119,8 @@ footer a:hover{color:var(--fg)}
       The wizard asks for a name, provider, model, judge and system prompt, and
       writes a <code>target.yaml</code> that already parses. It marks which
       providers have a credential in your environment and defaults to one that
-      will actually run.
+      will actually run, and defaults the judge to a <em>different</em> model
+      family than the target — a model is a poor judge of its own blind spots.
     </p>
     <p>
       Plain <code>halligan init</code> skips the questions and writes an example
@@ -244,10 +245,28 @@ footer a:hover{color:var(--fg)}
   <div class="wrap">
     <h2><span class="num">5</span>Run it</h2>
     <div class="term"><pre><span class="p">$ </span>halligan validate --suite suites/    <span class="c"># parses everything, zero API calls</span>
-<span class="p">$ </span>halligan run -t target.yaml -s suites/ --report report.html</pre></div>
+<span class="p">$ </span>halligan run -t target.yaml --pack catholic --report report.html</pre></div>
+    <p>
+      A <strong>pack</strong> bundles the suites for one domain with the system
+      prompt they were written against. <code>halligan packs</code> lists what
+      is installed:
+    </p>
+    <div class="term"><pre><span class="p">$ </span>halligan packs
+
+  <span class="g">✓</span> <span class="k">catholic</span>  Catholic-aligned AI assistant
+      9 suite(s), 74 case(s)
+      provenance: derived from a real adversarial session</pre></div>
     <p>Start smaller if you'd rather — <code>--case</code> and <code>--family</code> narrow the run:</p>
     <div class="term"><pre><span class="p">$ </span>halligan run -t target.yaml -s suites/jailbreak_roleplay.yaml
-<span class="p">$ </span>halligan run -t target.yaml -s suites/ --family pastoral</pre></div>
+<span class="p">$ </span>halligan run -t target.yaml --pack catholic --family pastoral</pre></div>
+    <div class="note">
+      <strong>Read the provenance before you trust a score.</strong>
+      <code>red-team-session</code> means the cases came from a real adversarial
+      session against a live assistant. <code>authored</code> means they were
+      written from the invariant structure and never fired at anything — still
+      useful, but a 96% means considerably less. Anything unreviewed is marked
+      in the listing.
+    </div>
   </div>
 </section>
 
@@ -307,11 +326,25 @@ footer a:hover{color:var(--fg)}
       <li>A <strong>financial</strong> assistant must not become a fiduciary under emotional pressure.</li>
     </ul>
     <p>
-      <code>policies/general.md</code> is the eight behavioural invariants with
-      the domain specifics lifted into four placeholders — a starting point for
-      the system prompt itself. <code>does_not_advocate</code> takes
+      Two policy templates ship, because probes assume a policy and a policy
+      nobody tests is a wish. <code>policies/general.md</code> is the eight
+      behavioural invariants with the domain specifics lifted into four
+      placeholders — <code>&lt;ASSISTANT_NAME&gt;</code>,
+      <code>&lt;DOMAIN&gt;</code>, <code>&lt;CREDENTIALED_ROLE&gt;</code>,
+      <code>&lt;RESERVED_ACTIONS&gt;</code>. <code>policies/catholic.md</code>
+      is the filled-in version the shipped suites were written against.
+      <code>init --interactive</code> writes whichever you pick as
+      <code>policy.md</code> and wires it in with <code>system_file:</code>.
+    </p>
+    <p>
+      For the graders: <code>does_not_advocate</code> takes
       <code>persona: [...]</code>, and the referral and secrecy graders take
       <code>markers: [...]</code>.
+    </p>
+    <p>
+      Writing a pack for your own domain is a <code>packs/&lt;name&gt;.yaml</code>
+      manifest pointing at your suites and policy, with an honest
+      <code>provenance:</code> value.
     </p>
     <p>
       <a href="https://github.com/mobius29er/halligan/blob/main/README.md">Full documentation on GitHub&nbsp;→</a>

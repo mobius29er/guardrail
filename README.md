@@ -90,6 +90,54 @@ Plus four suites on the age-appropriateness axis, driven by the
 
 **74 cases total.**
 
+### Packs
+
+A pack is the unit you actually want — "test my Catholic assistant", not "run
+these nine YAML files". It bundles the suites, the system prompt those suites
+were written against, and where the cases came from.
+
+```bash
+halligan packs                                   # what's installed
+halligan run -t target.yaml --pack catholic      # run the whole thing
+```
+
+```
+Available packs
+
+  ✓ catholic  Catholic-aligned AI assistant
+      9 suite(s), 74 case(s)
+      provenance: derived from a real adversarial session
+```
+
+**Provenance is a field, not a footnote**, and it defaults to the weaker claim:
+
+| Value | Means |
+|---|---|
+| `red-team-session` | Derived from a real adversarial session against a live assistant |
+| `authored` | Written from the invariant structure, never fired at anything |
+| `community` | Contributed — review before trusting a passing score |
+
+Anything that isn't `red-team-session` is marked in the listing. This matters
+more than it sounds: a thin pack returning 96% is worse than no pack at all,
+because it reads as assurance. `catholic` is `red-team-session` — the eight-rung
+ladder above is where its cases come from.
+
+### Policies
+
+The other half of a pack. Probes assume a policy; a policy nobody tests is a
+wish. Both ship, and `system_file:` wires one into your target config:
+
+| File | For |
+|---|---|
+| [`policies/general.md`](https://github.com/mobius29er/halligan/blob/main/policies/general.md) | Any domain — four placeholders to fill in |
+| [`policies/catholic.md`](https://github.com/mobius29er/halligan/blob/main/policies/catholic.md) | What the shipped suites were written against |
+
+`general.md` is the eight invariants from
+[`Truthly/behavioral-profile.md`](https://github.com/mobius29er/halligan/blob/main/Truthly/behavioral-profile.md)
+with the domain specifics lifted into `<ASSISTANT_NAME>`, `<DOMAIN>`,
+`<CREDENTIALED_ROLE>` and `<RESERVED_ACTIONS>`. Full guidance in
+[`policies/README.md`](https://github.com/mobius29er/halligan/blob/main/policies/README.md).
+
 ### The controlled experiment
 
 `consistency.yaml` also carries three matched arms that exist to *attribute* a
@@ -313,7 +361,47 @@ The same assistant with `--repeat 20`:
 provider-side nondeterminism, and Halligan will say so. To measure what users
 actually hit, run at the temperature you deploy at.
 
-Repeats multiply API cost by N. A reasonable pattern is `--repeat 1` on every
+### What it costs
+
+Repeats multiply API cost by N, and 74 cases at `--repeat 20` is 3,620 calls.
+`--estimate` exits without calling anything:
+
+```bash
+halligan run -t target.yaml --pack catholic --repeat 20 \
+  --estimate --price-in 3 --price-out 15
+```
+
+```
+  target calls             2,320  one per turn
+  judge calls              1,300  one per `kind: judge`
+
+  input tokens         3,264,400  from the actual prompts
+  output tokens          980,000  assumes 400 per reply
+
+  ~$24.49  at $3/$15 per Mtok in/out
+```
+
+Call counts are exact and input tokens are measured from the real prompt text;
+only reply length is assumed, and `--reply-tokens` tunes it.
+
+**Multi-turn cost is quadratic, not linear.** Every turn resends the whole
+conversation, so a six-turn ladder costs about twenty-one turns' worth of input.
+That is why a suite that looks small isn't, and why the estimate is worth
+running before the bill is.
+
+No price table ships with Halligan — a hardcoded rate goes stale silently and
+then lies with authority. Pass `--price-in`/`--price-out`, or set them once:
+
+```yaml
+metadata:
+  pricing:
+    input_per_mtok: 3.00
+    output_per_mtok: 15.00
+```
+
+Local providers report no metered cost rather than a misleading `$0.00`.
+
+A reasonable pattern is `--repeat 1` on every
 PR and `--repeat 20` nightly, or repeats scoped to the critical suite:
 
 ```bash
@@ -410,6 +498,11 @@ Full policy, including what to do if you leak a key: [`SECURITY.md`](https://git
 ## Repository layout
 
 ```
+packs/             Domain packs — suites + policy + provenance, per domain
+  catholic.yaml           The one that ships today
+policies/          Starting system prompts for the assistant under test
+  general.md              Domain-neutral, four placeholders to fill in
+  catholic.md             What the shipped suites were written against
 Truthly/           Case study for the assistant under test
   behavioral-profile.md   The eight invariants, reverse-engineered
   target.example.yaml     Ready-to-copy run config
@@ -419,7 +512,7 @@ data/
   names.yaml              Named-figure registry, by failure mode
 suites/            The probe suites (YAML) — 74 authored cases across 9 suites
 src/halligan/      The harness
-tests/             169 unit tests, no network required
+tests/             221 unit tests, no network required
 ```
 
 ---

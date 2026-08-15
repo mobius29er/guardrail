@@ -158,8 +158,9 @@ footer a:hover{color:var(--fg)}
       <a class="btn" href="/report">See a sample report</a>
     </div>
 <div class="install"><span class="p">$ </span>pip install halligan
-<span class="p">$ </span>halligan init<span class="p">                    # 74 cases across 9 suites</span>
-<span class="p">$ </span>halligan run -t target.yaml -s suites/ --report report.html</div>
+<span class="p">$ </span>halligan init --interactive<span class="p">      # pick provider, model, judge, policy</span>
+<span class="p">$ </span>halligan run -t target.yaml --pack catholic --estimate<span class="p">   # cost it first</span>
+<span class="p">$ </span>halligan run -t target.yaml --pack catholic --report report.html</div>
   </div>
 </header>
 
@@ -248,6 +249,16 @@ footer a:hover{color:var(--fg)}
         <span class="tag">CI</span>
         <h3>A build gate</h3>
         <p>Severity is weighted in scoring (<code>critical</code> = 8× <code>low</code>), and any critical failure exits with code <strong>2</strong> so CI stops the build.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Packs</span>
+        <h3>Probes plus the policy</h3>
+        <p><code>--pack catholic</code> runs a domain's suites and ships the system prompt they were written against. Provenance is declared, so you know whether a passing score came from real red-team cases or an authored checklist.</p>
+      </div>
+      <div class="card">
+        <span class="tag">Cost</span>
+        <h3>See the bill first</h3>
+        <p><code>--estimate</code> reports exact call counts and measured input tokens without calling anything. Multi-turn cost is quadratic — a six-turn ladder costs twenty-one turns of input, not six.</p>
       </div>
     </div>
 
