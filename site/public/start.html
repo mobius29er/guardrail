@@ -11,73 +11,35 @@
 <meta property="og:title" content="Getting started — Halligan">
 <meta property="og:description" content="From pip install to a build-gating probe run.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Cpath d='M9 7v18M9 16h9M18 7v18' stroke='%23f85149' stroke-width='2.6' stroke-linecap='round' fill='none'/%3E%3Cpath d='M23 9l0 14' stroke='%239198a1' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css">
 <style>
-:root{
-  --bg:#ffffff; --fg:#1a1a1a; --muted:#666; --line:#e2e2e2; --card:#fafafa;
-  --accent:#0b5fff; --fail:#cf222e; --warn:#9a6700; --flake:#8250df;
-  --termbg:#0d1117; --termfg:#e6edf3; --termline:#30363d;
-}
-@media (prefers-color-scheme:dark){
-  :root{
-    --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --line:#30363d; --card:#161b22;
-    --accent:#58a6ff; --fail:#f85149; --warn:#d29922; --flake:#a371f7;
-    --termbg:#010409; --termfg:#e6edf3; --termline:#30363d;
-  }
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--fg);
-  font:16px/1.65 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  -webkit-font-smoothing:antialiased}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
-     background:var(--card);border:1px solid var(--line);border-radius:.25rem;padding:.05rem .3rem}
-a{color:var(--accent)}
-.wrap{max-width:52rem;margin:0 auto;padding:0 1.25rem}
-.rule{border:0;border-top:1px solid var(--line);margin:0}
-
-nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);
-    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-nav .wrap{display:flex;align-items:center;gap:1.25rem;height:3.5rem;max-width:62rem}
-.brand{display:flex;align-items:center;gap:.55rem;font-weight:700;letter-spacing:.14em;
-       font-size:.82rem;text-transform:uppercase;color:var(--fg);text-decoration:none}
-nav .spacer{flex:1}
-nav a.navlink{color:var(--muted);text-decoration:none;font-size:.88rem}
-nav a.navlink:hover{color:var(--fg)}
-
+/* Getting-started page only. */
+:root{--wrap:52rem}
+code{background:var(--card);border:1px solid var(--line);border-radius:.25rem;
+     padding:.05rem .3rem;font-size:.9em}
 header{padding:3.5rem 0 1.5rem}
 h1{font-size:clamp(2rem,5vw,2.75rem);line-height:1.05;margin:0 0 .5rem;letter-spacing:-.03em}
 .lede{color:var(--muted);font-size:1.05rem;margin:0;max-width:52ch}
 section{padding:2.75rem 0}
 h2{font-size:1.3rem;letter-spacing:-.02em;margin:0 0 .75rem}
+/* Numbered step markers. */
 h2 .num{display:inline-grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;
-        background:var(--fg);color:var(--bg);font-size:.85rem;margin-right:.6rem;vertical-align:.05rem}
+        background:var(--fg);color:var(--bg);font-size:.85rem;margin-right:.6rem;
+        vertical-align:.05rem}
 h3{font-size:1rem;margin:1.75rem 0 .5rem}
 p{margin:0 0 1rem;max-width:62ch}
 ul{max-width:62ch;padding-left:1.2rem}
 li{margin:.35rem 0}
-
-.term{background:var(--termbg);color:var(--termfg);border:1px solid var(--termline);
-      border-radius:.6rem;overflow:hidden;margin:1.1rem 0}
+/* The page's own code blocks reuse .termlight from the shared sheet. */
+.term{background:#0b0d10;border:1px solid #23262b;border-radius:.6rem;overflow:hidden;
+      margin:1.1rem 0}
 .term pre{margin:0;padding:1rem 1.1rem;overflow-x:auto;font-size:.82rem;line-height:1.7;
-          font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+          font-family:var(--mono);color:#c9d1d9}
 .term .p{color:#8b949e;user-select:none}
 .term .c{color:#8b949e}
 .term .k{color:#58a6ff}.term .s{color:#d29922}.term .g{color:#3fb950}.term .r{color:#f85149}
-
-.note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--warn);
-      border-radius:.5rem;padding:1rem 1.15rem;font-size:.93rem;margin:1.5rem 0}
-.note strong{color:var(--fg)}
-.note.imp{border-left-color:var(--fail)}
-.tablewrap{overflow-x:auto;margin:1.25rem 0}
-table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
-th{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
-td code{white-space:nowrap}
-
-footer{border-top:1px solid var(--line);padding:2.5rem 0 3.5rem;color:var(--muted);font-size:.86rem;margin-top:2rem}
-footer .cols{display:flex;flex-wrap:wrap;gap:2.5rem;justify-content:space-between;max-width:62rem}
-footer a{color:var(--muted)}
-footer a:hover{color:var(--fg)}
+.note{font-size:.93rem;margin:1.5rem 0}
+footer{margin-top:2rem}
 </style>
 </head>
 <body>
@@ -85,16 +47,18 @@ footer a:hover{color:var(--fg)}
 <nav>
   <div class="wrap">
     <a class="brand" href="/">
-      <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
-        <path d="M9 7v18M9 16h9M18 7v18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-      </svg>
-      Halligan
+      <span class="mark">
+        <svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M9 6v20M9 16h14M23 6v20" stroke="#f4f5f7" stroke-width="3" stroke-linecap="round" fill="none"/>
+        </svg>
+      </span>
+      <span class="word">Halligan</span>
     </a>
     <span class="spacer"></span>
     <a class="navlink" href="/">Home</a>
-    <a class="navlink" href="/report">Sample report</a>
-    <a class="navlink" href="/about">About</a>
-    <a class="navlink" href="https://github.com/mobius29er/halligan">GitHub</a>
+    <a class="navlink" href="/start">Getting started</a>
+    <a class="navlink hide-sm" href="/report">Sample report</a>
+    <a class="navlink" href="https://github.com/mobius29er/halligan">GitHub<svg class="ext" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3H3v10h10v-3M10 2h4v4M14 2 7 9"/></svg></a>
   </div>
 </nav>
 
