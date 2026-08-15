@@ -378,6 +378,163 @@ _INIT_ASSETS: tuple[tuple[str, str], ...] = (
     ("Truthly/target.example.yaml", "target.yaml"),
 )
 
+#: Sensible starting model per provider. Deliberately not pinned to anything
+#: exotic — the point is a config that runs, which the user then edits.
+_DEFAULT_MODELS: dict[str, str] = {
+    "anthropic": "claude-sonnet-5",
+    "openai": "gpt-4o",
+    "gemini": "gemini-2.0-flash",
+    "ollama": "mistral:latest",
+    "http": "my-app-prod",
+}
+
+
+def _ask(prompt: str, default: str = "") -> str:
+    suffix = f" [{default}]" if default else ""
+    try:
+        answer = input(f"  {prompt}{suffix}: ").strip()
+    except EOFError:
+        return default
+    return answer or default
+
+
+def _choose(prompt: str, options: list[tuple[str, str]], default: int = 0) -> str:
+    """Numbered menu. Returns the chosen key; Enter takes the default."""
+    print(_c(f"\n{BOLD}{prompt}{RESET}"))
+    for i, (key, note) in enumerate(options, 1):
+        marker = "›" if i - 1 == default else " "
+        print(_c(f"   {marker} {i}. {key}{DIM}{'  ' + note if note else ''}{RESET}"))
+    while True:
+        raw = _ask("choice", str(default + 1))
+        if raw.isdigit() and 1 <= int(raw) <= len(options):
+            return options[int(raw) - 1][0]
+        print(_c(f"  {DIM}enter 1–{len(options)}{RESET}"))
+
+
+def _credentialled() -> dict[str, bool]:
+    """Which providers have a usable credential right now."""
+    out: dict[str, bool] = {}
+    for name, cls in PROVIDERS.items():
+        var = getattr(cls, "env_var", None)
+        out[name] = True if var is None else bool(os.environ.get(var, ""))
+    return out
+
+
+def _interactive_target(dest_root: Path, force: bool) -> str | None:
+    """Ask the questions, write target.yaml and policy.md. Returns a summary."""
+    _load_dotenv()
+    have = _credentialled()
+
+    print(_c(f"\n{BOLD}Configuring the assistant under test{RESET}"))
+    print(_c(f"{DIM}Enter accepts the default in brackets. Ctrl-C to bail.{RESET}"))
+
+    print()
+    name = _ask("name for this target", "my-assistant")
+
+    provider_opts = [
+        (p, "ready" if have.get(p) else f"needs {getattr(PROVIDERS[p], 'env_var', '')}")
+        for p in sorted(PROVIDERS)
+    ]
+    # Default to something that will actually run.
+    ready = [i for i, (p, _) in enumerate(provider_opts) if have.get(p)]
+    provider = _choose("Provider — what is under test?", provider_opts, ready[0] if ready else 0)
+
+    print()
+    model = _ask(f"model for {provider}", _DEFAULT_MODELS.get(provider, ""))
+    temperature = _ask("temperature (use what you deploy at, not 0)", "0.7")
+
+    url = ""
+    if provider == "http":
+        url = _ask("URL of your assistant's chat endpoint", "https://your-app.example.com/api/chat")
+
+    judge_opts = [(p, "" if have.get(p) else "no credential") for p in sorted(PROVIDERS) if p != "http"]
+    judge_opts.append(("none", "skip — cases using `kind: judge` cannot run"))
+    # A judge from a different family than the target is the whole point.
+    jdefault = next(
+        (i for i, (p, _) in enumerate(judge_opts) if p != provider and have.get(p)),
+        len(judge_opts) - 1,
+    )
+    judge = _choose("Judge model — grades `kind: judge` rubrics", judge_opts, jdefault)
+    judge_model = ""
+    if judge != "none":
+        print()
+        judge_model = _ask(f"model for {judge}", _DEFAULT_MODELS.get(judge, ""))
+
+    policy = _choose(
+        "System prompt — what is the assistant told to be?",
+        [
+            ("template", "write policies/general.md as policy.md and fill it in"),
+            ("inline", "leave a placeholder in target.yaml to paste your own"),
+        ],
+    )
+
+    lines = [
+        f"name: {name}",
+        "",
+        "provider:",
+        f"  name: {provider}",
+        f"  model: {model}",
+    ]
+    if url:
+        lines += [
+            f"  url: {url}",
+            "  body:",
+            '    messages: "{{messages}}"',
+            '    system: "{{system}}"',
+            "  response_path: reply          # dotted path to the reply text",
+        ]
+    lines += [
+        f"  temperature: {temperature}",
+        "  max_tokens: 2048",
+        "",
+        "concurrency: 4",
+        "",
+    ]
+
+    wrote_policy = False
+    if policy == "template":
+        root = _asset_root()
+        src = (root / "policies/general.md") if root else None
+        dst = dest_root / "policy.md"
+        if src and src.is_file() and (force or not dst.exists()):
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+            wrote_policy = True
+        lines += ["# Fill in the <PLACEHOLDERS> in policy.md before running.", "system_file: policy.md", ""]
+    else:
+        lines += [
+            "system: |",
+            "  <paste the system prompt you actually deploy>",
+            "",
+        ]
+
+    if judge != "none":
+        lines += [
+            "# A different model family than the target on purpose — a model is a",
+            "# poor judge of its own blind spots.",
+            "judge:",
+            f"  name: {judge}",
+            f"  model: {judge_model}",
+            "  temperature: 0.0",
+            "  max_tokens: 512",
+            "",
+        ]
+
+    target_path = dest_root / "target.yaml"
+    if target_path.exists() and not force:
+        print(
+            _c(f"\n\033[31mRefusing to overwrite {target_path}.\033[0m Re-run with --force."),
+            file=sys.stderr,
+        )
+        return None
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    target_path.write_text("\n".join(lines), encoding="utf-8")
+
+    summary = "target.yaml" + (" + policy.md" if wrote_policy else "")
+    if judge == "none":
+        summary += "  (no judge — `kind: judge` cases will be refused at run time)"
+    return summary
+
 
 def cmd_init(args: argparse.Namespace) -> int:
     """Write the bundled suites and an example target config into a directory."""
@@ -397,7 +554,23 @@ def cmd_init(args: argparse.Namespace) -> int:
     written: list[str] = []
     skipped: list[str] = []
 
-    for src_rel, dst_rel in _INIT_ASSETS:
+    interactive = getattr(args, "interactive", False)
+    if interactive and not sys.stdin.isatty():
+        print(
+            _c(
+                "\033[31mError:\033[0m --interactive needs a terminal, and stdin is not "
+                "a TTY.\n  Drop the flag to write the example config non-interactively."
+            ),
+            file=sys.stderr,
+        )
+        return EXIT_CONFIG
+
+    # Interactive mode writes its own target.yaml, so don't also copy the example.
+    assets = (
+        tuple(a for a in _INIT_ASSETS if a[1] != "target.yaml") if interactive else _INIT_ASSETS
+    )
+
+    for src_rel, dst_rel in assets:
         src = root / src_rel
         dst = dest_root / dst_rel
         if not src.exists():
@@ -416,6 +589,21 @@ def cmd_init(args: argparse.Namespace) -> int:
         print(_c(f"  \033[32m+\033[0m {path}"))
     for path in skipped:
         print(_c(f"  \033[90m·\033[0m {path} {DIM}exists, left alone (--force to overwrite){RESET}"))
+
+    if interactive:
+        summary = _interactive_target(dest_root, args.force)
+        if summary is None:
+            return EXIT_CONFIG
+        print(_c(f"\n  \033[32m+\033[0m {summary}"))
+        print(
+            _c(
+                f"\n{BOLD}Next{RESET}\n"
+                f"  1. {BOLD}halligan doctor{RESET} — confirm the credential is visible.\n"
+                f"  2. {BOLD}halligan validate --suite suites/{RESET} — no API calls.\n"
+                f"  3. {BOLD}halligan run -t target.yaml -s suites/ --report report.html{RESET}\n"
+            )
+        )
+        return EXIT_OK
 
     if not written and skipped:
         print(_c(f"\n{DIM}Nothing written — everything was already there.{RESET}\n"))
@@ -575,6 +763,15 @@ def build_parser() -> argparse.ArgumentParser:
     p_init.add_argument("--dir", default=".", help="where to write (default: current directory)")
     p_init.add_argument(
         "--force", action="store_true", help="overwrite files that already exist"
+    )
+    p_init.add_argument(
+        "--interactive",
+        "-i",
+        action="store_true",
+        help=(
+            "pick provider, model, judge and system prompt from menus instead of "
+            "editing target.yaml by hand"
+        ),
     )
     p_init.set_defaults(func=cmd_init)
 

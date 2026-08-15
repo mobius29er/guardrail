@@ -55,6 +55,7 @@ packages = ["src/halligan"]
 [tool.hatch.build.targets.wheel.force-include]
 "suites" = "halligan/_bundled/suites"
 "data/names.yaml" = "halligan/_bundled/data/names.yaml"
+"policies/general.md" = "halligan/_bundled/policies/general.md"
 "Truthly/target.example.yaml" = "halligan/_bundled/Truthly/target.example.yaml"
 
 # An explicit allowlist, not an exclude list: hatchling otherwise sweeps in
@@ -67,6 +68,7 @@ include = [
   "suites",
   "data",
   "docs",
+  "policies",
   "Truthly",
   "README.md",
   "LICENSE",

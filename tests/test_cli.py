@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+import sys
 import textwrap
 
 from halligan.cli import EXIT_CONFIG, EXIT_OK, _asset_root, cases_needing_judge, main
@@ -123,3 +125,73 @@ class TestJudgePreflight:
         plain = self._case("plain", ["refuses"])
         assert cases_needing_judge(self._target(None), [judged, plain]) == ["judged"]
         assert cases_needing_judge(self._target(None), [plain]) == []
+
+
+class TestInteractiveInit:
+    """`halligan init --interactive` — menus instead of hand-editing YAML.
+
+    The wizard's output is a config file other code has to load, so these
+    assert it parses, not just that it was written.
+    """
+
+    @staticmethod
+    def _drive(monkeypatch, answers: list[str]) -> None:
+        it = iter(answers)
+        monkeypatch.setattr("builtins.input", lambda prompt="": next(it, ""))
+        monkeypatch.setattr(sys.stdin, "isatty", lambda: True, raising=False)
+
+    def test_writes_a_config_that_loads(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+        self._drive(monkeypatch, ["insurance-bot", "1", "", "0.7", "5", "1"])
+        assert main(["init", "--interactive", "--dir", str(tmp_path)]) == EXIT_OK
+
+        target = TargetConfig.load(tmp_path / "target.yaml")
+        assert target.name == "insurance-bot"
+        assert target.provider["name"] == "anthropic"
+        # `template` wires the policy in via system_file, which must resolve.
+        assert (tmp_path / "policy.md").is_file()
+        assert "<ASSISTANT_NAME>" in (target.system or "")
+
+    def test_http_branch_emits_a_usable_body_template(self, tmp_path, monkeypatch):
+        self._drive(
+            monkeypatch,
+            ["my-app", "3", "my-app-prod", "0.7", "https://api.example.com/chat", "5", "2"],
+        )
+        assert main(["init", "--interactive", "--dir", str(tmp_path)]) == EXIT_OK
+        target = TargetConfig.load(tmp_path / "target.yaml")
+        assert target.provider["name"] == "http"
+        assert target.provider["url"] == "https://api.example.com/chat"
+        assert target.provider["body"]["messages"] == "{{messages}}"
+
+    def test_declining_a_judge_omits_the_block(self, tmp_path, monkeypatch):
+        self._drive(monkeypatch, ["t", "3", "m", "0.7", "https://x.example/c", "5", "2"])
+        assert main(["init", "--interactive", "--dir", str(tmp_path)]) == EXIT_OK
+        assert TargetConfig.load(tmp_path / "target.yaml").judge is None
+
+    def test_refuses_without_a_tty(self, tmp_path, monkeypatch, capsys):
+        """A piped stdin in CI must fail loudly, never hang waiting on input."""
+        monkeypatch.setattr(sys.stdin, "isatty", lambda: False, raising=False)
+        assert main(["init", "--interactive", "--dir", str(tmp_path)]) == EXIT_CONFIG
+        assert "not a TTY" in capsys.readouterr().err
+        assert not (tmp_path / "target.yaml").exists()
+
+    def test_does_not_clobber_an_existing_target(self, tmp_path, monkeypatch):
+        (tmp_path / "target.yaml").write_text("mine", encoding="utf-8")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+        self._drive(monkeypatch, ["t", "1", "", "0.7", "5", "2"])
+        assert main(["init", "--interactive", "--dir", str(tmp_path)]) == EXIT_CONFIG
+        assert (tmp_path / "target.yaml").read_text(encoding="utf-8") == "mine"
+
+
+class TestPolicyTemplate:
+    def test_ships_with_the_package(self):
+        root = _asset_root()
+        assert root is not None
+        assert (root / "policies/general.md").is_file()
+
+    def test_placeholders_are_all_documented(self):
+        """A placeholder nobody tells you to replace is a trap."""
+        root = _asset_root()
+        policy = (root / "policies/general.md").read_text(encoding="utf-8")
+        found = set(re.findall(r"<[A-Z_]+>", policy))
+        assert found == {"<ASSISTANT_NAME>", "<DOMAIN>", "<CREDENTIALED_ROLE>", "<RESERVED_ACTIONS>"}
