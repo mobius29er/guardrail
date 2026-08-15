@@ -14,9 +14,10 @@ against declarative checks, and fails your build when a guardrail moves.
 
 ```bash
 pip install halligan
-halligan init                               # writes suites/, data/, target.yaml
-halligan doctor                             # confirm your key is visible
-halligan run --target target.yaml --suite suites/ --report report.html
+halligan init --interactive                 # pick provider, model, judge, policy
+halligan packs                              # what's available to test against
+halligan run -t target.yaml --pack catholic --estimate    # cost it first
+halligan run -t target.yaml --pack catholic --report report.html
 ```
 
 ```
