@@ -1,0 +1,86 @@
+# Publish to PyPI without a token.
+#
+# Authentication is OIDC: GitHub mints a short-lived credential for this
+# workflow, in this repository, and PyPI verifies it against a publisher you
+# registered once. There is no API token to store, leak, or rotate — which
+# removes the failure modes that careful secret handling cannot cover: a
+# screen share, a backup, a sync client, or any process on a laptop.
+#
+# It also produces PEP 740 attestations, binding each artifact to the exact
+# commit that built it. For a tool people install *because* they trust it
+# about safety, that provenance is worth having.
+#
+# SETUP (once, and it must be done before the first tag push):
+#   pypi.org -> Account settings -> Publishing -> Add a pending publisher
+#     PyPI project name : halligan
+#     Owner             : mobius29er
+#     Repository        : halligan
+#     Workflow name     : release.yml
+#     Environment       : pypi
+#   Then: GitHub -> Settings -> Environments -> New environment -> "pypi"
+#
+# Cut a release with:
+#   git tag -a v0.1.7 -m "halligan 0.1.7" && git push origin v0.1.7
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+# Least privilege at the top; the publish job opts into id-token below.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+
+      - name: Build
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build
+          python -m twine check dist/*
+
+      # The version in the tag and the version in the package must agree, or
+      # you get a release whose name lies about its contents.
+      - name: Tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+          echo "tag=$tag package=$pkg"
+          [ "$tag" = "$pkg" ] || { echo "::error::tag v$tag does not match pyproject version $pkg"; exit 1; }
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/halligan/
+    permissions:
+      id-token: write        # the OIDC token. This is what replaces the secret.
+      attestations: write    # PEP 740 provenance
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # release/v1
+        with:
+          attestations: true

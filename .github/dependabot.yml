@@ -1,0 +1,48 @@
+# Dependency updates.
+#
+# Three ecosystems, because this repo has three: the Python package, the
+# Cloudflare Worker under site/, and the GitHub Actions themselves. Actions are
+# the one people forget, and they are the ecosystem with the shortest path to
+# arbitrary code execution in CI.
+#
+# Security alerts are separate and always on — this file governs the routine
+# version bumps.
+
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      # One PR for the dev toolchain rather than four. Runtime deps stay
+      # separate, because those ship to users and deserve their own review.
+      dev-tooling:
+        dependency-type: development
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "site"
+    groups:
+      wrangler:
+        patterns: ["*"]
