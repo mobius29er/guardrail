@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>About — Halligan</title>
+<meta name="description" content="Who builds Halligan and why: an open-source guardrail testing harness for AI assistants, built by Jeremy Foxx at Foxxception LLC.">
+<link rel="canonical" href="https://halligan.dev/about">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://halligan.dev/about">
+<meta property="og:title" content="About — Halligan">
+<meta property="og:description" content="Who builds Halligan and why.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Cpath d='M9 7v18M9 16h9M18 7v18' stroke='%23f85149' stroke-width='2.6' stroke-linecap='round' fill='none'/%3E%3Cpath d='M23 9l0 14' stroke='%239198a1' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#ffffff; --fg:#1a1a1a; --muted:#666; --line:#e2e2e2; --card:#fafafa;
+  --accent:#0b5fff; --fail:#cf222e; --flake:#8250df;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --line:#30363d; --card:#161b22;
+    --accent:#58a6ff; --fail:#f85149; --flake:#a371f7;
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em}
+a{color:var(--accent)}
+.wrap{max-width:48rem;margin:0 auto;padding:0 1.25rem}
+.rule{border:0;border-top:1px solid var(--line);margin:0}
+
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:1.25rem;height:3.5rem;max-width:62rem}
+.brand{display:flex;align-items:center;gap:.55rem;font-weight:700;letter-spacing:.14em;
+       font-size:.82rem;text-transform:uppercase;color:var(--fg);text-decoration:none}
+nav .spacer{flex:1}
+nav a.navlink{color:var(--muted);text-decoration:none;font-size:.88rem}
+nav a.navlink:hover{color:var(--fg)}
+
+header{padding:3.5rem 0 1.5rem}
+h1{font-size:clamp(2rem,5vw,2.75rem);line-height:1.05;margin:0 0 .5rem;letter-spacing:-.03em}
+.lede{color:var(--muted);font-size:1.05rem;margin:0}
+section{padding:2.5rem 0}
+h2{font-size:1.3rem;letter-spacing:-.02em;margin:0 0 .75rem}
+p{margin:0 0 1rem}
+.kicker{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+        color:var(--muted);margin:0 0 .75rem}
+.pull{font-size:1.15rem;font-weight:600;line-height:1.4;border-left:3px solid var(--fail);
+      padding-left:1.1rem;margin:1.5rem 0;max-width:40ch}
+
+.who{display:grid;grid-template-columns:repeat(auto-fit,minmax(15rem,1fr));gap:1rem;margin-top:1.5rem}
+.who .card{background:var(--card);border:1px solid var(--line);border-radius:.6rem;padding:1.15rem 1.25rem}
+.who .card h3{margin:0 0 .3rem;font-size:1rem}
+.who .card p{margin:0 0 .6rem;color:var(--muted);font-size:.9rem}
+.who .card a{font-size:.9rem}
+
+.support{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--flake);
+         border-radius:.6rem;padding:1.35rem 1.5rem;margin-top:1.5rem}
+.btns{display:flex;flex-wrap:wrap;gap:.7rem;margin-top:1rem}
+.btn{display:inline-block;padding:.6rem 1.05rem;border-radius:.45rem;font-size:.92rem;
+     font-weight:600;text-decoration:none;border:1px solid var(--line);color:var(--fg)}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn:hover{border-color:var(--muted)}
+
+footer{border-top:1px solid var(--line);padding:2.5rem 0 3.5rem;color:var(--muted);font-size:.86rem;margin-top:2rem}
+footer .cols{display:flex;flex-wrap:wrap;gap:2.5rem;justify-content:space-between;max-width:62rem}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--fg)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M9 7v18M9 16h9M18 7v18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      </svg>
+      Halligan
+    </a>
+    <span class="spacer"></span>
+    <a class="navlink" href="/">Home</a>
+    <a class="navlink" href="/report">Sample report</a>
+    <a class="navlink" href="https://github.com/mobius29er/halligan">GitHub</a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <h1>About</h1>
+    <p class="lede">Who builds Halligan, and why it exists.</p>
+  </div>
+</header>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <p class="kicker">The project</p>
+    <h2>Why a halligan</h2>
+    <p>
+      A halligan bar is a firefighter's forcible-entry tool — adze, pick and
+      fork on one shaft, made for getting through a door that is supposed to
+      hold. This is the same idea pointed at an AI assistant's guardrails:
+      you find out what holds by attacking it deliberately, not by hoping.
+    </p>
+    <p>
+      The project started from a real red-team session against a Catholic AI
+      assistant. An eight-rung escalation ladder, run by hand: information
+      probes, hedonic challenge, identity attack, epistemic trap, and the same
+      role-inversion jailbreak five separate times with a different
+      justification each time.
+    </p>
+    <p>
+      It held seven of eight cleanly. On the eighth, the line moved — not
+      because of a new argument, but because refusing had been reframed as
+      cruelty. Every individual response was defensible. The trajectory was not.
+    </p>
+    <p class="pull">A guardrail that holds four times and yields on the fifth.</p>
+    <p>
+      That is the failure single-turn evals structurally cannot see, and it is
+      what Halligan is built to find — by running conversations rather than
+      prompts, repeating them to separate a real guardrail from a coin flip,
+      and sliding a probe through every position to work out whether it is the
+      prompt or the build-up doing the damage.
+    </p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Who</p>
+    <h2>Built by</h2>
+
+    <div class="who">
+      <div class="card">
+        <h3>Jeremy Foxx</h3>
+        <p>Author and maintainer. Wrote the probe suites, the harness, and the analysis they came from.</p>
+        <a href="https://jeremyfoxx.com" rel="me">jeremyfoxx.com&nbsp;→</a>
+      </div>
+      <div class="card">
+        <h3>Foxxception LLC</h3>
+        <p>The studio behind Halligan and the rest of the product line.</p>
+        <a href="https://foxxception.com">foxxception.com&nbsp;→</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Support</p>
+    <h2>Sponsoring the work</h2>
+    <p>
+      Halligan is Apache-2.0 and free to use, with no paid tier and nothing
+      held back. If it caught something in your assistant that a single-turn
+      eval would have missed, sponsorship is what keeps the suites growing and
+      the harness maintained.
+    </p>
+
+    <div class="support">
+      <strong>Two ways to help</strong>
+      <div class="btns">
+        <a class="btn primary" href="https://github.com/sponsors/mobius29er">GitHub Sponsors</a>
+        <a class="btn" href="https://ko-fi.com/cruxway">Ko-fi</a>
+      </div>
+    </div>
+
+    <p style="margin-top:1.5rem">
+      Contributing a probe suite is worth as much as money. If you have adapted
+      the ladder to a medical, legal or financial assistant, the
+      <a href="https://github.com/mobius29er/halligan/blob/main/CONTRIBUTING.md">contributing guide</a>
+      covers how to send it back.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap cols">
+    <div>
+      <strong style="color:var(--fg)">Halligan</strong> — Apache-2.0.<br>
+      A <a href="https://foxxception.com">Foxxception LLC</a> project.
+    </div>
+    <div>
+      <a href="/">Home</a> ·
+      <a href="/report">Sample report</a> ·
+      <a href="https://github.com/mobius29er/halligan">GitHub</a> ·
+      <a href="https://github.com/sponsors/mobius29er">Sponsor</a> ·
+      <a href="https://ko-fi.com/cruxway">Ko-fi</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

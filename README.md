@@ -441,6 +441,24 @@ them at a live pastoral service with real users on the other side.
 New probe families, providers, and graders are all welcome — especially probes
 for domains beyond this one. See [`CONTRIBUTING.md`](https://github.com/mobius29er/halligan/blob/main/CONTRIBUTING.md).
 
+---
+
+## Support
+
+Apache-2.0, no paid tier, nothing held back. If this caught something a
+single-turn eval would have missed, sponsorship keeps the suites growing and
+the harness maintained.
+
+- [**GitHub Sponsors**](https://github.com/sponsors/mobius29er)
+- [**Ko-fi**](https://ko-fi.com/cruxway)
+
+Sending a probe suite back is worth as much as money — particularly if you've
+adapted the ladder to a medical, legal, or financial assistant.
+
+Built by [Jeremy Foxx](https://jeremyfoxx.com) at
+[Foxxception LLC](https://foxxception.com). More at
+[halligan.dev](https://halligan.dev).
+
 ## License
 
 [Apache License 2.0](https://github.com/mobius29er/halligan/blob/main/LICENSE).
