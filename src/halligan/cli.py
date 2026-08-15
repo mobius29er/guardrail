@@ -5,13 +5,14 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
+import shutil
 import sys
 from pathlib import Path
 
 from halligan import __version__
 from halligan.config import TargetConfig, load_suites
 from halligan.graders import available_graders
-from halligan.models import CaseGroup, Outcome, RunResult, Severity
+from halligan.models import Case, CaseGroup, Outcome, RunResult, Severity
 from halligan.providers import PROVIDERS
 from halligan.report import redact, write_html, write_json, write_markdown
 from halligan.runner import run_suites, select_cases
@@ -74,6 +75,18 @@ def _load_dotenv() -> None:
 # ---------------------------------------------------------------------------
 
 
+def cases_needing_judge(target: TargetConfig, selected: list[Case]) -> list[str]:
+    """Ids of selected cases that require a judge the target does not define.
+
+    Empty when a judge is configured, or when nothing selected uses one — that
+    escape hatch matters, since plenty of suites are keyword-only and should not
+    be made to demand a second model they never call.
+    """
+    if target.judge is not None:
+        return []
+    return [c.id for c in selected if any(chk.kind == "judge" for chk in c.checks)]
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     _load_dotenv()
 
@@ -93,6 +106,31 @@ def cmd_run(args: argparse.Namespace) -> int:
         if args.sweep
         else len(selected)
     )
+    # Without a judge provider every `kind: judge` check fails rather than
+    # skipping, so a forgotten judge block reports a wall of red that looks like
+    # the model misbehaving. Say so before spending anything.
+    needs = cases_needing_judge(target, selected)
+    if needs:
+        shown = ", ".join(needs[:3]) + (f", +{len(needs) - 3} more" if len(needs) > 3 else "")
+        print(
+            _c(
+                f"\033[31mConfiguration error:\033[0m {len(needs)} of {len(selected)} "
+                f"selected case(s) use 'kind: judge', but the target config defines "
+                f"no judge model.\n"
+                f"  Affected: {shown}\n\n"
+                f"  Add a judge block to {args.target} — a different model family "
+                f"than the one under test:\n\n"
+                f"    judge:\n"
+                f"      name: anthropic\n"
+                f"      model: claude-sonnet-5\n"
+                f"      temperature: 0.0\n\n"
+                f"  Or narrow the run with --family / --case to cases that "
+                f"don't need one."
+            ),
+            file=sys.stderr,
+        )
+        return EXIT_CONFIG
+
     repeat = max(1, int(args.repeat))
     print(
         _c(
@@ -315,6 +353,86 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _asset_root() -> Path | None:
+    """Where the bundled suites live.
+
+    In a wheel they are force-included under ``halligan/_bundled/``. In a source
+    checkout that directory does not exist and they sit at the repo root. Both
+    use the same relative layout, so callers below can ignore which one it is.
+    """
+    packaged = Path(__file__).resolve().parent / "_bundled"
+    if (packaged / "suites").is_dir():
+        return packaged
+    repo = Path(__file__).resolve().parents[2]
+    if (repo / "suites").is_dir():
+        return repo
+    return None
+
+
+#: (source path relative to the asset root, destination relative to --dir).
+#: The target config lands as `target.yaml` because that is the name every
+#: example command uses.
+_INIT_ASSETS: tuple[tuple[str, str], ...] = (
+    ("suites", "suites"),
+    ("data/names.yaml", "data/names.yaml"),
+    ("Truthly/target.example.yaml", "target.yaml"),
+)
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    """Write the bundled suites and an example target config into a directory."""
+    root = _asset_root()
+    if root is None:
+        print(
+            _c(
+                "\033[31mError:\033[0m bundled suites not found. This is a packaging "
+                "bug — please report it at "
+                "https://github.com/mobius29er/halligan/issues"
+            ),
+            file=sys.stderr,
+        )
+        return EXIT_CONFIG
+
+    dest_root = Path(args.dir)
+    written: list[str] = []
+    skipped: list[str] = []
+
+    for src_rel, dst_rel in _INIT_ASSETS:
+        src = root / src_rel
+        dst = dest_root / dst_rel
+        if not src.exists():
+            continue
+        if dst.exists() and not args.force:
+            skipped.append(dst_rel)
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        if src.is_dir():
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+        else:
+            shutil.copy2(src, dst)
+        written.append(dst_rel)
+
+    for path in written:
+        print(_c(f"  \033[32m+\033[0m {path}"))
+    for path in skipped:
+        print(_c(f"  \033[90m·\033[0m {path} {DIM}exists, left alone (--force to overwrite){RESET}"))
+
+    if not written and skipped:
+        print(_c(f"\n{DIM}Nothing written — everything was already there.{RESET}\n"))
+        return EXIT_OK
+
+    print(
+        _c(
+            f"\n{BOLD}Next{RESET}\n"
+            f"  1. Edit {BOLD}target.yaml{RESET} — pick a provider and paste in the "
+            f"system prompt you actually ship.\n"
+            f"  2. {BOLD}halligan doctor{RESET} to confirm the credential is visible.\n"
+            f"  3. {BOLD}halligan run -t target.yaml -s suites/{RESET}\n"
+        )
+    )
+    return EXIT_OK
+
+
 def cmd_graders(args: argparse.Namespace) -> int:
     from halligan import graders as g
 
@@ -449,6 +567,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_val = sub.add_parser("validate", help="check suite files without calling any API")
     p_val.add_argument("--suite", "-s", action="append", required=True)
     p_val.set_defaults(func=cmd_validate)
+
+    p_init = sub.add_parser(
+        "init",
+        help="write the bundled suites and an example target config into a directory",
+    )
+    p_init.add_argument("--dir", default=".", help="where to write (default: current directory)")
+    p_init.add_argument(
+        "--force", action="store_true", help="overwrite files that already exist"
+    )
+    p_init.set_defaults(func=cmd_init)
 
     p_gr = sub.add_parser("graders", help="list available graders")
     p_gr.set_defaults(func=cmd_graders)

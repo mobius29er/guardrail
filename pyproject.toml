@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "halligan"
-version = "0.1.1"
+version = "0.1.2"
 description = "Automated guardrail testing for AI assistants — fire adversarial probe suites at any model and fail the build when a guardrail moves."
 readme = "README.md"
 license = "Apache-2.0"
@@ -47,6 +47,15 @@ halligan = "halligan.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/halligan"]
+
+# `pip install halligan` used to give you a CLI and nothing to point it at.
+# The suites ship inside the wheel so `halligan init` can write them out.
+# Mapped to the same relative layout the repo uses, so one resolver handles
+# both a wheel and a source checkout.
+[tool.hatch.build.targets.wheel.force-include]
+"suites" = "halligan/_bundled/suites"
+"data/names.yaml" = "halligan/_bundled/data/names.yaml"
+"Truthly/target.example.yaml" = "halligan/_bundled/Truthly/target.example.yaml"
 
 # An explicit allowlist, not an exclude list: hatchling otherwise sweeps in
 # everything git tracks, and the 0.1.0 sdist shipped at 37 MB because of it.

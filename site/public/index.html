@@ -154,9 +154,9 @@ footer a:hover{color:var(--fg)}
       <a class="btn primary" href="https://github.com/mobius29er/halligan">View on GitHub</a>
       <a class="btn" href="/report">See a sample report</a>
     </div>
-<div class="install"><span class="p">$ </span>git clone https://github.com/mobius29er/halligan
-<span class="p">$ </span>cd halligan &amp;&amp; pip install -e .
-<span class="p">$ </span>halligan run --target target.yaml --suite suites/ --report report.html</div>
+<div class="install"><span class="p">$ </span>pip install halligan
+<span class="p">$ </span>halligan init<span class="p">                    # 74 cases across 9 suites</span>
+<span class="p">$ </span>halligan run -t target.yaml -s suites/ --report report.html</div>
   </div>
 </header>
 
