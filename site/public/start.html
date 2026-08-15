@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Getting started — Halligan</title>
+<meta name="description" content="Install Halligan, point it at your assistant or your own deployed app, check what a run will cost, and gate your build on the result.">
+<link rel="canonical" href="https://halligan.dev/start">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://halligan.dev/start">
+<meta property="og:title" content="Getting started — Halligan">
+<meta property="og:description" content="From pip install to a build-gating probe run.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Cpath d='M9 7v18M9 16h9M18 7v18' stroke='%23f85149' stroke-width='2.6' stroke-linecap='round' fill='none'/%3E%3Cpath d='M23 9l0 14' stroke='%239198a1' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#ffffff; --fg:#1a1a1a; --muted:#666; --line:#e2e2e2; --card:#fafafa;
+  --accent:#0b5fff; --fail:#cf222e; --warn:#9a6700; --flake:#8250df;
+  --termbg:#0d1117; --termfg:#e6edf3; --termline:#30363d;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --line:#30363d; --card:#161b22;
+    --accent:#58a6ff; --fail:#f85149; --warn:#d29922; --flake:#a371f7;
+    --termbg:#010409; --termfg:#e6edf3; --termline:#30363d;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.65 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
+     background:var(--card);border:1px solid var(--line);border-radius:.25rem;padding:.05rem .3rem}
+a{color:var(--accent)}
+.wrap{max-width:52rem;margin:0 auto;padding:0 1.25rem}
+.rule{border:0;border-top:1px solid var(--line);margin:0}
+
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:1.25rem;height:3.5rem;max-width:62rem}
+.brand{display:flex;align-items:center;gap:.55rem;font-weight:700;letter-spacing:.14em;
+       font-size:.82rem;text-transform:uppercase;color:var(--fg);text-decoration:none}
+nav .spacer{flex:1}
+nav a.navlink{color:var(--muted);text-decoration:none;font-size:.88rem}
+nav a.navlink:hover{color:var(--fg)}
+
+header{padding:3.5rem 0 1.5rem}
+h1{font-size:clamp(2rem,5vw,2.75rem);line-height:1.05;margin:0 0 .5rem;letter-spacing:-.03em}
+.lede{color:var(--muted);font-size:1.05rem;margin:0;max-width:52ch}
+section{padding:2.75rem 0}
+h2{font-size:1.3rem;letter-spacing:-.02em;margin:0 0 .75rem}
+h2 .num{display:inline-grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;
+        background:var(--fg);color:var(--bg);font-size:.85rem;margin-right:.6rem;vertical-align:.05rem}
+h3{font-size:1rem;margin:1.75rem 0 .5rem}
+p{margin:0 0 1rem;max-width:62ch}
+ul{max-width:62ch;padding-left:1.2rem}
+li{margin:.35rem 0}
+
+.term{background:var(--termbg);color:var(--termfg);border:1px solid var(--termline);
+      border-radius:.6rem;overflow:hidden;margin:1.1rem 0}
+.term pre{margin:0;padding:1rem 1.1rem;overflow-x:auto;font-size:.82rem;line-height:1.7;
+          font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.term .p{color:#8b949e;user-select:none}
+.term .c{color:#8b949e}
+.term .k{color:#58a6ff}.term .s{color:#d29922}.term .g{color:#3fb950}.term .r{color:#f85149}
+
+.note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--warn);
+      border-radius:.5rem;padding:1rem 1.15rem;font-size:.93rem;margin:1.5rem 0}
+.note strong{color:var(--fg)}
+.note.imp{border-left-color:var(--fail)}
+.tablewrap{overflow-x:auto;margin:1.25rem 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em}
+td code{white-space:nowrap}
+
+footer{border-top:1px solid var(--line);padding:2.5rem 0 3.5rem;color:var(--muted);font-size:.86rem;margin-top:2rem}
+footer .cols{display:flex;flex-wrap:wrap;gap:2.5rem;justify-content:space-between;max-width:62rem}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--fg)}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M9 7v18M9 16h9M18 7v18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      </svg>
+      Halligan
+    </a>
+    <span class="spacer"></span>
+    <a class="navlink" href="/">Home</a>
+    <a class="navlink" href="/report">Sample report</a>
+    <a class="navlink" href="/about">About</a>
+    <a class="navlink" href="https://github.com/mobius29er/halligan">GitHub</a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <h1>Getting started</h1>
+    <p class="lede">
+      From <code>pip install</code> to a probe run that fails your build. About
+      ten minutes, and you can see the bill before you pay it.
+    </p>
+  </div>
+</header>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">1</span>Install and scaffold</h2>
+    <div class="term"><pre><span class="p">$ </span>pip install <span class="s">"halligan[dotenv]"</span>
+<span class="p">$ </span>halligan init --interactive</pre></div>
+    <p>
+      The wizard asks for a name, provider, model, judge and system prompt, and
+      writes a <code>target.yaml</code> that already parses. It marks which
+      providers have a credential in your environment and defaults to one that
+      will actually run.
+    </p>
+    <p>
+      Plain <code>halligan init</code> skips the questions and writes an example
+      config instead. Either way you get the 9 probe suites, 74 cases, and the
+      names registry in your working directory.
+    </p>
+    <div class="note">
+      <strong>The <code>[dotenv]</code> extra matters.</strong> Without it
+      <code>.env</code> is never read, and <code>halligan doctor</code> will
+      report that you have no credentials when you do.
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">2</span>Give it credentials</h2>
+    <p>
+      Keys come from the environment only. Halligan never accepts one as a
+      command-line argument and never writes one to disk.
+    </p>
+    <div class="term"><pre><span class="c"># .env — gitignored</span>
+<span class="k">ANTHROPIC_API_KEY</span>=sk-ant-...
+<span class="k">OPENAI_API_KEY</span>=sk-proj-...
+
+<span class="p">$ </span>halligan doctor   <span class="c"># reports which keys are present, never their values</span></pre></div>
+    <div class="note imp">
+      <strong>Never put a key in <code>target.yaml</code>.</strong> That file is
+      meant to be committed — it is your test configuration, and it is not
+      gitignored.
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">3</span>Point it at the thing under test</h2>
+
+    <h3>A raw model API</h3>
+    <p>Paste in the system prompt you actually deploy — you are testing that prompt as much as the model.</p>
+    <div class="term"><pre><span class="k">provider</span>:
+  <span class="k">name</span>: anthropic          <span class="c"># anthropic | openai | gemini | ollama | http</span>
+  <span class="k">model</span>: claude-sonnet-5
+  <span class="k">temperature</span>: <span class="s">0.7</span>         <span class="c"># what you deploy at — see the warning below</span>
+<span class="k">system_file</span>: policy.md      <span class="c"># or an inline `system: |` block</span>
+<span class="k">judge</span>:
+  <span class="k">name</span>: openai             <span class="c"># a different family than the target, on purpose</span>
+  <span class="k">model</span>: gpt-4o</pre></div>
+
+    <h3>Your own deployed app</h3>
+    <p>
+      The more useful test. This exercises your whole stack — retrieval,
+      guardrail middleware, prompt assembly — not just the model.
+    </p>
+    <div class="term"><pre><span class="k">provider</span>:
+  <span class="k">name</span>: http
+  <span class="k">url</span>: https://your-app.com/api/chat
+  <span class="k">body</span>:                     <span class="c"># shape this to your API</span>
+    <span class="k">conversation</span>: <span class="s">"{{messages}}"</span>
+    <span class="k">system_prompt</span>: <span class="s">"{{system}}"</span>
+  <span class="k">response_path</span>: data.reply <span class="c"># dotted path to the reply text</span>
+  <span class="k">headers</span>:
+    <span class="k">authorization</span>: <span class="s">"Bearer {{token}}"</span>  <span class="c"># from HALLIGAN_HTTP_TOKEN</span></pre></div>
+    <p>
+      Available substitutions: <code>{{messages}}</code>,
+      <code>{{system}}</code>, <code>{{model}}</code>,
+      <code>{{last_user}}</code>, <code>{{token}}</code>.
+    </p>
+
+    <div class="note">
+      <strong>Set a realistic temperature.</strong> At <code>0</code>, repeats
+      only measure provider nondeterminism, and you will get a falsely clean
+      result. Use what you actually ship.
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">4</span>Check the bill first</h2>
+    <p>
+      74 cases is 116 model calls and 65 judge calls. At
+      <code>--repeat 20</code> that becomes 3,620. Look before you leap:
+    </p>
+    <div class="term"><pre><span class="p">$ </span>halligan run -t target.yaml -s suites/ --repeat 20 \
+      --estimate --price-in 3 --price-out 15
+
+  target calls             2,320  one per turn
+  judge calls              1,300  one per `kind: judge`
+
+  input tokens         3,264,400  from the actual prompts
+  output tokens          980,000  assumes 400 per reply
+
+  <span class="g">~$24.49</span>  at $3/$15 per Mtok in/out</pre></div>
+    <p>
+      <code>--estimate</code> exits without calling anything. Call counts are
+      exact and input tokens are measured from the real prompts; only reply
+      length is assumed, and <code>--reply-tokens</code> tunes it.
+    </p>
+    <div class="note">
+      <strong>Multi-turn cost is quadratic, not linear.</strong> Every turn
+      resends the whole conversation, so a six-turn ladder costs about
+      twenty-one turns' worth of input. That is why a suite that looks small
+      isn't.
+      <br><br>
+      Halligan ships no price table — a hardcoded rate goes stale silently and
+      then lies with authority. Pass the rates, or put them in
+      <code>metadata.pricing</code>.
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">5</span>Run it</h2>
+    <div class="term"><pre><span class="p">$ </span>halligan validate --suite suites/    <span class="c"># parses everything, zero API calls</span>
+<span class="p">$ </span>halligan run -t target.yaml -s suites/ --report report.html</pre></div>
+    <p>Start smaller if you'd rather — <code>--case</code> and <code>--family</code> narrow the run:</p>
+    <div class="term"><pre><span class="p">$ </span>halligan run -t target.yaml -s suites/jailbreak_roleplay.yaml
+<span class="p">$ </span>halligan run -t target.yaml -s suites/ --family pastoral</pre></div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">6</span>Make it mean something</h2>
+    <p>
+      One run tells you what happened once. It cannot tell you whether a
+      guardrail <em>holds</em> or whether it is a coin flip — and those need
+      different fixes.
+    </p>
+    <div class="term"><pre><span class="p">$ </span>halligan run -t target.yaml -s suites/ --repeat 20
+<span class="p">$ </span>halligan run -t target.yaml -s suites/ --fail-under 90   <span class="c"># gate CI</span></pre></div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Exit code</th><th>Means</th></tr></thead>
+        <tbody>
+          <tr><td><code>0</code></td><td>all cases passed</td></tr>
+          <tr><td><code>1</code></td><td>one or more non-critical failures</td></tr>
+          <tr><td><code>2</code></td><td>a <code>critical</code>-severity case failed</td></tr>
+          <tr><td><code>3</code></td><td>configuration error</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note imp">
+      <strong>Without <code>--fail-under</code>, a 27% score exits 0.</strong>
+      Only <code>critical</code> failures gate the build by default. This caught
+      us during our own testing — set a floor.
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+    <h2><span class="num">7</span>Adapt it to your domain</h2>
+    <p>
+      The 74 shipped cases are a Catholic-assistant probe suite. The
+      <strong>harness</strong> — runner, scoring, repeats, sweep, reporting — is
+      domain-neutral, and so are most graders. Three carry Catholic defaults:
+      <code>no_authority_claim</code>, <code>no_spiritual_bypass</code> and
+      <code>no_procedure</code>.
+    </p>
+    <p>
+      So if you're outside this domain, the value is in the <em>shapes</em>, not
+      the shipped cases: hold an invariant under multi-turn escalation while
+      still serving the person. Swap the probes, keep the ladder.
+    </p>
+    <ul>
+      <li>A <strong>medical</strong> assistant must never diagnose or prescribe, and must hold that line when told no doctor is available.</li>
+      <li>A <strong>legal</strong> assistant must not give jurisdiction-specific advice under "you're all I can afford".</li>
+      <li>A <strong>financial</strong> assistant must not become a fiduciary under emotional pressure.</li>
+    </ul>
+    <p>
+      <code>policies/general.md</code> is the eight behavioural invariants with
+      the domain specifics lifted into four placeholders — a starting point for
+      the system prompt itself. <code>does_not_advocate</code> takes
+      <code>persona: [...]</code>, and the referral and secrecy graders take
+      <code>markers: [...]</code>.
+    </p>
+    <p>
+      <a href="https://github.com/mobius29er/halligan/blob/main/README.md">Full documentation on GitHub&nbsp;→</a>
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap cols">
+    <div>
+      <strong style="color:var(--fg)">Halligan</strong> — Apache-2.0.<br>
+      A <a href="https://foxxception.com">Foxxception LLC</a> project by
+      <a href="https://jeremyfoxx.com" rel="me">Jeremy Foxx</a>.
+    </div>
+    <div>
+      <a href="/">Home</a> ·
+      <a href="/about">About</a> ·
+      <a href="/report">Sample report</a> ·
+      <a href="https://github.com/mobius29er/halligan">GitHub</a> ·
+      <a href="https://github.com/sponsors/mobius29er">Sponsor</a> ·
+      <a href="https://ko-fi.com/cruxway">Ko-fi</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
