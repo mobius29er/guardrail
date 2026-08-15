@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Halligan</title>
+  <path fill="#151A1E" d="M10 5h7v12h5V5h7v54H10V37l-5-5 5-5V5Z"/>
+  <path fill="#151A1E" d="M37 5h11l11 7H48v36h7L43 60h-6V5Z"/>
+  <path fill="#FF5A1F" d="M9 26h34l8-6v13l-8 6H9l-6 6V32l6-6Z"/>
+</svg>

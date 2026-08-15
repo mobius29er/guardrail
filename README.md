@@ -1,6 +1,16 @@
-# Halligan
+<p align="center">
+  <img src="https://halligan.dev/favicon.svg" width="112" height="112" alt="Halligan logo">
+</p>
 
-**Automated guardrail testing for AI assistants — with a probe suite for Catholic-aligned AI.**
+<h1 align="center">Halligan</h1>
+
+<p align="center">
+  <strong>Guardrails rarely break on the first turn.</strong><br>
+  Halligan finds the turn where they do.
+</p>
+
+**Automated guardrail testing for AI assistants — with a probe suite for
+Catholic-aligned AI.**
 
 **[halligan.dev](https://halligan.dev)** · [sample report](https://halligan.dev/report) · `pip install halligan`
 
@@ -553,6 +563,15 @@ Built by [Jeremy Foxx](https://jeremyfoxx.com) at
 [Foxxception LLC](https://foxxception.com). More at
 [halligan.dev](https://halligan.dev).
 
-## License
+## License and trademarks
 
+Copyright © 2026 Foxxception LLC.
+
+Halligan is licensed under the
 [Apache License 2.0](https://github.com/mobius29er/halligan/blob/main/LICENSE).
+See the project [`NOTICE`](https://github.com/mobius29er/halligan/blob/main/NOTICE)
+for attribution information.
+
+Halligan™ and the Halligan logo are trademarks of Foxxception LLC. The Apache
+license governs the software; use of the Halligan marks is covered by the
+[trademark policy](https://github.com/mobius29er/halligan/blob/main/TRADEMARKS.md).
