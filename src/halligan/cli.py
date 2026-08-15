@@ -11,6 +11,7 @@ from pathlib import Path
 
 from halligan import __version__
 from halligan.config import TargetConfig, load_suites
+from halligan.estimate import DEFAULT_REPLY_TOKENS, Estimate, estimate_run
 from halligan.graders import available_graders
 from halligan.models import Case, CaseGroup, Outcome, RunResult, Severity
 from halligan.providers import PROVIDERS
@@ -75,6 +76,67 @@ def _load_dotenv() -> None:
 # ---------------------------------------------------------------------------
 
 
+def _rates(target: TargetConfig, args: argparse.Namespace) -> tuple[float | None, float | None]:
+    """Per-million-token rates from the command line, else the target config."""
+    pricing = target.metadata.get("pricing") if isinstance(target.metadata, dict) else None
+    pricing = pricing if isinstance(pricing, dict) else {}
+    pin = args.price_in if args.price_in is not None else pricing.get("input_per_mtok")
+    pout = args.price_out if args.price_out is not None else pricing.get("output_per_mtok")
+    return (float(pin) if pin is not None else None, float(pout) if pout is not None else None)
+
+
+def _print_estimate(
+    target: TargetConfig, est: Estimate, metered: bool, args: argparse.Namespace
+) -> None:
+    print(
+        _c(
+            f"\n{BOLD}Estimate{RESET} → {target.name} "
+            f"{DIM}({target.provider.get('name')}/{target.model}){RESET}"
+        )
+    )
+    rep = f", {args.repeat}× repeats" if args.repeat > 1 else ""
+    print(_c(f"{DIM}{est.cases} case run(s){rep}{RESET}\n"))
+
+    print(_c(f"  {'target calls':<18}{est.target_calls:>12,}  {DIM}one per turn{RESET}"))
+    print(_c(f"  {'judge calls':<18}{est.judge_calls:>12,}  {DIM}one per `kind: judge`{RESET}"))
+    print(_c(f"  {'':<18}{'':>12}"))
+    print(_c(f"  {'input tokens':<18}{est.input_tokens:>12,}  {DIM}from the actual prompts{RESET}"))
+    print(
+        _c(
+            f"  {'output tokens':<18}{est.output_tokens:>12,}  "
+            f"{DIM}assumes {est.reply_tokens} per reply{RESET}"
+        )
+    )
+
+    if not metered:
+        print(_c(f"\n  {BOLD}No metered cost{RESET} {DIM}— this provider runs locally.{RESET}\n"))
+        return
+
+    price_in, price_out = _rates(target, args)
+    cost = est.cost(price_in, price_out)
+    if cost is None:
+        print(
+            _c(
+                f"\n  {BOLD}Cost{RESET}  unknown — no rates configured.\n"
+                f"  {DIM}Add them to your target config:{RESET}\n\n"
+                f"    metadata:\n"
+                f"      pricing:\n"
+                f"        input_per_mtok: 3.00\n"
+                f"        output_per_mtok: 15.00\n\n"
+                f"  {DIM}or pass --price-in / --price-out. Halligan ships no price table:{RESET}\n"
+                f"  {DIM}a hardcoded rate goes stale silently and then lies with authority.{RESET}\n"
+            )
+        )
+        return
+    print(
+        _c(
+            f"\n  {BOLD}~${cost:,.2f}{RESET}  {DIM}at ${price_in:g}/${price_out:g} "
+            f"per Mtok in/out{RESET}\n"
+        )
+    )
+    print(_c(f"  {DIM}Approximate. Token counts use a 4-chars-per-token heuristic.{RESET}\n"))
+
+
 def cases_needing_judge(target: TargetConfig, selected: list[Case]) -> list[str]:
     """Ids of selected cases that require a judge the target does not define.
 
@@ -132,6 +194,18 @@ def cmd_run(args: argparse.Namespace) -> int:
         return EXIT_CONFIG
 
     repeat = max(1, int(args.repeat))
+
+    est = estimate_run(
+        select_cases(suites, filter_family=args.family, filter_id=args.case, sweep=args.sweep),
+        system=target.system,
+        repeat=repeat,
+        reply_tokens=args.reply_tokens,
+    )
+    metered = str(target.provider.get("name")) not in ("ollama",)
+    if args.estimate:
+        _print_estimate(target, est, metered, args)
+        return EXIT_OK
+
     print(
         _c(
             f"{BOLD}Halligan{RESET} → {target.name} "
@@ -745,6 +819,30 @@ def build_parser() -> argparse.ArgumentParser:
         type=float,
         metavar="PCT",
         help="exit non-zero if the weighted score falls below PCT",
+    )
+    p_run.add_argument(
+        "--estimate",
+        action="store_true",
+        help=(
+            "print how many calls and tokens this run would cost, then exit "
+            "without calling anything"
+        ),
+    )
+    p_run.add_argument(
+        "--reply-tokens",
+        type=int,
+        default=DEFAULT_REPLY_TOKENS,
+        metavar="N",
+        help=(
+            f"assumed length of a model reply, for --estimate only "
+            f"(default {DEFAULT_REPLY_TOKENS})"
+        ),
+    )
+    p_run.add_argument(
+        "--price-in", type=float, metavar="USD", help="input rate per million tokens"
+    )
+    p_run.add_argument(
+        "--price-out", type=float, metavar="USD", help="output rate per million tokens"
     )
     p_run.set_defaults(func=cmd_run)
 
