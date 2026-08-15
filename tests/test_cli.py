@@ -142,15 +142,25 @@ class TestInteractiveInit:
 
     def test_writes_a_config_that_loads(self, tmp_path, monkeypatch):
         monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
-        self._drive(monkeypatch, ["insurance-bot", "1", "", "0.7", "5", "1"])
+        # Policy menu is [<packs...>, general, inline]; "2" is the generic template.
+        self._drive(monkeypatch, ["insurance-bot", "1", "", "0.7", "5", "2"])
         assert main(["init", "--interactive", "--dir", str(tmp_path)]) == EXIT_OK
 
         target = TargetConfig.load(tmp_path / "target.yaml")
         assert target.name == "insurance-bot"
         assert target.provider["name"] == "anthropic"
-        # `template` wires the policy in via system_file, which must resolve.
+        # The template wires in via system_file, which must resolve.
         assert (tmp_path / "policy.md").is_file()
         assert "<ASSISTANT_NAME>" in (target.system or "")
+
+    def test_choosing_a_pack_writes_that_pack_s_policy(self, tmp_path, monkeypatch):
+        """Picking a domain should give you the prompt its probes assume."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "x")
+        self._drive(monkeypatch, ["parish-bot", "1", "", "0.7", "5", "1"])
+        assert main(["init", "--interactive", "--dir", str(tmp_path)]) == EXIT_OK
+        system = TargetConfig.load(tmp_path / "target.yaml").system or ""
+        assert "Catholic" in system
+        assert "<ASSISTANT_NAME>" not in system
 
     def test_http_branch_emits_a_usable_body_template(self, tmp_path, monkeypatch):
         self._drive(

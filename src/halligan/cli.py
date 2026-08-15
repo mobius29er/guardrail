@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import os
 import shutil
 import sys
+import textwrap
 from pathlib import Path
 
 from halligan import __version__
@@ -14,6 +16,7 @@ from halligan.config import TargetConfig, load_suites
 from halligan.estimate import DEFAULT_REPLY_TOKENS, Estimate, estimate_run
 from halligan.graders import available_graders
 from halligan.models import Case, CaseGroup, Outcome, RunResult, Severity
+from halligan.packs import available_packs, load_pack, resolve_suites
 from halligan.providers import PROVIDERS
 from halligan.report import redact, write_html, write_json, write_markdown
 from halligan.runner import run_suites, select_cases
@@ -149,12 +152,25 @@ def cases_needing_judge(target: TargetConfig, selected: list[Case]) -> list[str]
     return [c.id for c in selected if any(chk.kind == "judge" for chk in c.checks)]
 
 
+def _suite_args(args: argparse.Namespace) -> list[str]:
+    """Suite paths for this run — from --suite, or resolved from --pack."""
+    paths = list(args.suite or [])
+    if getattr(args, "pack", None):
+        root = _asset_root()
+        if root is None:
+            raise ValueError("bundled packs not found; pass --suite explicitly")
+        paths += resolve_suites(root, load_pack(root, args.pack))
+    if not paths:
+        raise ValueError("nothing to run: pass --suite PATH or --pack NAME")
+    return paths
+
+
 def cmd_run(args: argparse.Namespace) -> int:
     _load_dotenv()
 
     try:
         target = TargetConfig.load(args.target)
-        suites = load_suites(args.suite)
+        suites = load_suites(_suite_args(args))
     except (FileNotFoundError, ValueError) as exc:
         print(_c(f"\033[31mConfiguration error:\033[0m {exc}"), file=sys.stderr)
         return EXIT_CONFIG
@@ -534,13 +550,18 @@ def _interactive_target(dest_root: Path, force: bool) -> str | None:
         print()
         judge_model = _ask(f"model for {judge}", _DEFAULT_MODELS.get(judge, ""))
 
-    policy = _choose(
-        "System prompt — what is the assistant told to be?",
-        [
-            ("template", "write policies/general.md as policy.md and fill it in"),
-            ("inline", "leave a placeholder in target.yaml to paste your own"),
-        ],
-    )
+    # A pack ships the probes and the policy those probes were written against,
+    # so choosing one picks a matching starting prompt rather than a generic one.
+    root = _asset_root()
+    packs = available_packs(root) if root else []
+    policy_opts = [
+        (p.name, f"{p.title} — {p.provenance_label}") for p in packs
+    ]
+    policy_opts += [
+        ("general", "domain-neutral template with placeholders to fill in"),
+        ("inline", "leave a placeholder in target.yaml to paste your own"),
+    ]
+    policy = _choose("System prompt — what is the assistant told to be?", policy_opts)
 
     lines = [
         f"name: {name}",
@@ -566,15 +587,20 @@ def _interactive_target(dest_root: Path, force: bool) -> str | None:
     ]
 
     wrote_policy = False
-    if policy == "template":
-        root = _asset_root()
-        src = (root / "policies/general.md") if root else None
+    if policy != "inline":
+        chosen = next((p for p in packs if p.name == policy), None)
+        rel = chosen.policy if chosen and chosen.policy else "policies/general.md"
+        src = (root / rel) if root else None
         dst = dest_root / "policy.md"
         if src and src.is_file() and (force or not dst.exists()):
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
             wrote_policy = True
-        lines += ["# Fill in the <PLACEHOLDERS> in policy.md before running.", "system_file: policy.md", ""]
+        if chosen is None:
+            lines.append("# Fill in the <PLACEHOLDERS> in policy.md before running.")
+        else:
+            lines.append(f"# Starting policy from the '{chosen.name}' pack — edit to match yours.")
+        lines += ["system_file: policy.md", ""]
     else:
         lines += [
             "system: |",
@@ -695,6 +721,41 @@ def cmd_init(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def cmd_packs(args: argparse.Namespace) -> int:
+    """List the domain packs that ship with Halligan."""
+    root = _asset_root()
+    found = available_packs(root) if root else []
+    if not found:
+        print(_c(f"\n{DIM}No packs found.{RESET}\n"))
+        return EXIT_OK
+
+    print(_c(f"\n{BOLD}Available packs{RESET}\n"))
+    for pack in found:
+        cases = 0
+        # A pack that can't resolve still gets listed — with 0 cases, which is
+        # itself the signal — rather than taking the whole listing down.
+        with contextlib.suppress(FileNotFoundError, ValueError):
+            cases = sum(len(s.cases) for s in load_suites(resolve_suites(root, pack)))
+
+        mark = "\033[32m✓\033[0m" if pack.reviewed else "\033[33m·\033[0m"
+        print(_c(f"  {mark} {BOLD}{pack.name}{RESET}  {DIM}{pack.title}{RESET}"))
+        print(_c(f"      {DIM}{len(pack.suites)} suite(s), {cases} case(s){RESET}"))
+        if pack.description:
+            for line in textwrap.wrap(pack.description, 72):
+                print(_c(f"      {line}"))
+        print(_c(f"      {DIM}provenance: {pack.provenance_label}{RESET}"))
+        if not pack.reviewed:
+            print(
+                _c(
+                    f"      {DIM}\033[33mWeigh a passing score accordingly.\033[0m{RESET}"
+                )
+            )
+        print()
+
+    print(_c(f"{DIM}  halligan run -t target.yaml --pack {found[0].name}{RESET}\n"))
+    return EXIT_OK
+
+
 def cmd_graders(args: argparse.Namespace) -> int:
     from halligan import graders as g
 
@@ -768,8 +829,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--suite",
         "-s",
         action="append",
-        required=True,
-        help="suite file or directory (repeatable)",
+        help="suite file or directory (repeatable). Optional if --pack is given.",
+    )
+    p_run.add_argument(
+        "--pack",
+        metavar="NAME",
+        help="run a bundled domain pack — see `halligan packs`",
     )
     p_run.add_argument("--report", help="write an HTML report here")
     p_run.add_argument("--json", help="write raw JSON results here")
@@ -872,6 +937,9 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     p_init.set_defaults(func=cmd_init)
+
+    p_packs = sub.add_parser("packs", help="list the bundled domain packs")
+    p_packs.set_defaults(func=cmd_packs)
 
     p_gr = sub.add_parser("graders", help="list available graders")
     p_gr.set_defaults(func=cmd_graders)

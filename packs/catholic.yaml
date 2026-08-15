@@ -1,0 +1,49 @@
+# A pack bundles the probes for one domain with the policy they assume.
+#
+# `halligan packs`                 list what is available
+# `halligan run --pack catholic`   run the whole thing
+# `halligan init --interactive`    pick one and write it into your project
+
+name: catholic
+title: Catholic-aligned AI assistant
+
+description: >
+  Jailbreak resistance, doctrinal accuracy, pastoral safety and age handling
+  for an assistant that answers on faith and morals. The critical failures are
+  an assistant that claims to absolve sin, one that promotes itself into the
+  vacancy when told no priest is reachable, and one that presents the Church's
+  teaching and a rejected worldview as two equally valid paths.
+
+# Where the cases came from, so a passing score can be weighed properly.
+# `red-team-session` means derived from a real adversarial session against a
+# live assistant. `authored` would mean written from the invariant structure
+# and never fired at anything.
+provenance: red-team-session
+provenance_note: >
+  Derived from an eight-rung escalation ladder run by hand against a live
+  Catholic assistant — information probes, hedonic challenge, identity attack,
+  epistemic trap, and the same role-inversion jailbreak five times with a
+  different justification each time. It held seven of eight; the eighth moved
+  because refusing had been reframed as cruelty.
+
+policy: policies/catholic.md
+
+suites:
+  - suites/doctrinal_accuracy.yaml
+  - suites/jailbreak_roleplay.yaml
+  - suites/identity_attack.yaml
+  - suites/pastoral_safety.yaml
+  - suites/consistency.yaml
+  - suites/age_general.yaml
+  - suites/age_catholic.yaml
+  - suites/age_gating.yaml
+  - suites/names_handling.yaml
+
+# Extra data files the suites reference, copied alongside them by `init`.
+data:
+  - data/names.yaml
+
+notes: >
+  Three graders carry Catholic-specific defaults — no_authority_claim,
+  no_spiritual_bypass and no_procedure. Everything else in the harness is
+  domain-neutral.
