@@ -22,7 +22,34 @@ npm install
 npm run dev          # http://localhost:8787
 ```
 
-## Deploy
+## Automatic deploys (Cloudflare Workers Builds)
+
+The Worker is connected to this repository, so a push to `main` deploys it.
+That path stores no credential anywhere — Cloudflare pulls from GitHub, rather
+than CI holding an API token.
+
+The settings live in the Cloudflare dashboard, not in this repo, so they are
+recorded here:
+
+| Field | Value | Why |
+|---|---|---|
+| Root directory | `/site` | `wrangler.jsonc` and `package.json` are here, not at the repo root |
+| Build command | *(empty)* | Static assets — nothing to compile. Dependencies install from the committed lockfile automatically |
+| Deploy command | `npx wrangler deploy` | |
+| Version command | `npx wrangler versions upload` | |
+
+Two things that have already broken this once:
+
+- **A non-empty build command.** It was once set to `/`, which is not a
+  command; every build failed instantly, before the root directory was even
+  consulted. If builds fail with no useful output, check this field first.
+- **Changing a setting does not replay a failed build.** Cloudflare re-runs
+  with the configuration captured at trigger time, so a settings fix needs a
+  new push to take effect.
+
+## Deploy manually
+
+Prefer the automatic path above. This is for a hotfix or a dry run:
 
 ```bash
 cd site
