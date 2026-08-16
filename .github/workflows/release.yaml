@@ -15,7 +15,7 @@
 #     PyPI project name : halligan
 #     Owner             : mobius29er
 #     Repository        : halligan
-#     Workflow name     : release.yml
+#     Workflow name     : release.yaml
 #     Environment       : pypi
 #   Then: GitHub -> Settings -> Environments -> New environment -> "pypi"
 #
