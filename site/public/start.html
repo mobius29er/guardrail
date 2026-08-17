@@ -154,6 +154,33 @@ footer{margin-top:2rem}
       <code>{{last_user}}</code>, <code>{{token}}</code>.
     </p>
 
+    <h3>A local model</h3>
+    <p>
+      The <code>openai</code> provider talks to anything speaking that dialect —
+      LM Studio, vLLM, Ollama's OpenAI endpoint, Together, Groq. Point
+      <code>base_url</code> at it; a local server needs no real key.
+    </p>
+    <div class="term"><pre><span class="k">provider</span>:
+  <span class="k">name</span>: openai
+  <span class="k">model</span>: google/gemma-4-12b
+  <span class="k">base_url</span>: http://127.0.0.1:1234/v1
+  <span class="k">max_tokens</span>: <span class="s">4096</span>
+<span class="k">concurrency</span>: <span class="s">1</span>            <span class="c"># a local server serves one model</span></pre></div>
+    <div class="note">
+      <strong>Reasoning models need a far bigger budget.</strong> Thinking
+      tokens count against the same limit, and one can spend all of it before
+      writing anything — measured at 4,095 reasoning tokens of 4,096, content
+      empty. Give them 8k–16k. Halligan raises a clear error rather than scoring
+      the empty string as a refusal.
+      <br><br>
+      <strong>Don't make the judge the smallest model you have.</strong> It does
+      the harder reasoning. A 4B judge scored two correct refusals as critical
+      failures in our own testing — it couldn't separate “states an argument and
+      answers it” from “states it and defers”, which is the distinction the
+      suites turn on. It also has to fit in VRAM beside the target, or every
+      call pays a model-swap.
+    </div>
+
     <div class="note">
       <strong>Set a realistic temperature.</strong> At <code>0</code>, repeats
       only measure provider nondeterminism, and you will get a falsely clean
@@ -250,7 +277,7 @@ footer{margin-top:2rem}
           <tr><td><code>0</code></td><td>all cases passed</td></tr>
           <tr><td><code>1</code></td><td>one or more non-critical failures</td></tr>
           <tr><td><code>2</code></td><td>a <code>critical</code>-severity case failed</td></tr>
-          <tr><td><code>3</code></td><td>configuration error</td></tr>
+          <tr><td><code>3</code></td><td>configuration error — including a suite that needs a judge when none is set</td></tr>
         </tbody>
       </table>
     </div>
@@ -260,6 +287,21 @@ footer{margin-top:2rem}
       Only <code>critical</code> failures gate the build by default. This caught
       us during our own testing — set a floor.
     </div>
+
+    <h3>Failed is not the same as errored</h3>
+    <p>
+      A check that could not run has produced no verdict, and reporting “not
+      graded” as “failed” invents a finding. A judge model that would not load
+      once turned a run with <em>zero</em> behavioural failures into a reported
+      score of 18.2%.
+    </p>
+    <p>
+      So <code>✗ fail</code> means the model did the thing, and
+      <code>! error</code> means we could not tell. Errors still count against
+      the score — a case that could not be run is not a case that passed — but
+      the summary says <code>5 errored</code>, never <code>5 failed</code>, so a
+      low number never lies about why it is low.
+    </p>
   </div>
 </section>
 

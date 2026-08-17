@@ -471,6 +471,81 @@ clean keyword-only run as weak evidence.
 
 ---
 
+## Local models and OpenAI-compatible endpoints
+
+The `openai` provider talks to anything speaking that dialect — LM Studio,
+vLLM, Ollama's OpenAI endpoint, Together, Groq, OpenRouter. Point `base_url` at
+it. No key is needed for a local server; the field is sent and ignored.
+
+```yaml
+provider:
+  name: openai
+  model: google/gemma-4-12b
+  base_url: http://127.0.0.1:1234/v1
+  temperature: 0.7
+  max_tokens: 4096
+```
+
+Four things cost real time to discover, so they are written down here.
+
+**Token parameter.** OpenAI's own API wants `max_completion_tokens`; almost
+nothing else implements it. LM Studio accepts the field, silently ignores it,
+and falls back to a small default — which produces empty responses that used to
+score as failed refusals. Halligan now sends `max_completion_tokens` to
+`api.openai.com` and `max_tokens` everywhere else. Override with
+`token_param: max_tokens` if a gateway disagrees.
+
+**Reasoning models need a much bigger budget.** Thinking tokens are billed
+against the same limit, and a reasoning model can spend all of it before
+writing anything: measured at 4,095 reasoning tokens out of 4,096, content
+empty. Give them 8k–16k, or use a non-reasoning model. Halligan raises a clear
+error rather than scoring the empty string.
+
+**The judge must fit in memory alongside the target.** On a 16 GB card, a 12B
+judge next to a 20B target evicts and reloads a model on every call — one case
+took 190 seconds, nearly all of it swapping. With both resident it was 63. Long
+context windows are the usual culprit: a 256k window costs more VRAM than the
+weights.
+
+**Do not make the judge the smallest model in the room.** It does the harder
+reasoning. A 4B judge scored two correct refusals as critical failures in
+testing — it could not tell "states an argument and answers it" from "states it
+and defers", which is exactly the distinction the suites turn on.
+
+**Set `concurrency: 1`** for a local server. It serves one model; parallel
+requests only contend.
+
+---
+
+## Failed, errored, and the difference
+
+A check that could not run has produced no verdict, and reporting "not graded"
+as "failed" invents a finding. A judge model that would not load once turned a
+run with zero behavioural failures into a reported score of 18.2%.
+
+So Halligan separates them:
+
+| Outcome | Means | Counts against the score |
+|---|---|---|
+| `✓` pass | graded, held | no |
+| `✗` fail | graded, the model did the thing | yes |
+| `!` error | could not be graded | yes, but reported separately |
+
+Errors count against the score deliberately — a case that could not be run is
+not a case that passed, and a CI gate should not go green on unverified work.
+What they never do is masquerade as behaviour: the summary says
+`5 errored`, not `5 failed`, so a low score never lies about why.
+
+One asymmetry worth knowing: errored *runs* are excluded from a case's **flake
+rate**, because a network blip is not intermittent model behaviour — but an
+errored *case* still counts against the **score**. Different questions.
+
+Provider outages, unreachable judges, unknown graders, and out-of-range turn
+indices all error. A genuine grader bug — a bad regex raising `ValueError` —
+still fails, because that is a defect in the check rather than in reaching it.
+
+---
+
 ## Testing your own deployment
 
 Use the `http` provider to point at your app rather than a raw model API:
