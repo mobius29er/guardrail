@@ -74,7 +74,11 @@ h1 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:
 /* --------------------------  plain-language intro  ---------------------- */
 /* Deliberately larger and looser than the technical sections below. Someone
    who has never heard of an "eval" should be able to read this at a glance. */
-.plainprose{max-width:60ch;font-size:1.16rem;line-height:1.72}
+/* Centred in a narrower column of its own. A 60ch measure inside the page's
+   70rem container left a ribbon of text against the left edge with half the
+   screen empty — the right measure in the wrong frame. */
+#plain .wrap{max-width:50rem}
+.plainprose{max-width:none;font-size:1.16rem;line-height:1.72}
 .plainprose p{margin:0 0 1.3rem}
 .plainprose strong{font-weight:680}
 .plainprose .highlight{font-family:var(--serif);font-style:italic;font-size:1.3rem;
