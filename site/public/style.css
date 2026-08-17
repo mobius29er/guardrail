@@ -23,10 +23,16 @@
 :root{
   /* Brand band — fixed in both themes */
   --d-bg:#08090a; --d-fg:#f4f5f7; --d-muted:#9297a1; --d-line:#23262b;
-  --d-panel:#0f1114; --brand:#e5484d;
+  --d-panel:#0f1114;
+  /* Three roles, three tokens — one value cannot satisfy all of them.
+     Ratios are WCAG 2.1 AA, measured, not estimated.
+       --brand       identity red, text/border on the dark band  5.09:1 on #08090a
+       --brand-solid button fill; white text must clear 4.5      5.10:1 white-on-fill
+       --brand-text  small text on page backgrounds, theme-aware 4.89:1 light card */
+  --brand:#e5484d; --brand-solid:#cf2f38; --brand-text:#cf2f38;
 
   /* Page — follows the viewer */
-  --bg:#ffffff; --fg:#1a1a1a; --muted:#666; --line:#e2e2e2; --card:#fafafa;
+  --bg:#ffffff; --fg:#1a1a1a; --muted:#575d66; --line:#e2e2e2; --card:#fafafa;
   --pass:#1a7f37; --fail:#cf222e; --warn:#9a6700; --accent:#0b5fff; --flake:#8250df;
   --pass-bg:#dafbe1; --fail-bg:#ffebe9; --flake-bg:#f3eefc;
 
@@ -39,16 +45,18 @@
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --line:#30363d; --card:#161b22;
+    --bg:#0d1117; --fg:#e6edf3; --muted:#a4acb8; --line:#30363d; --card:#161b22;
     --pass:#3fb950; --fail:#f85149; --warn:#d29922; --accent:#58a6ff; --flake:#a371f7;
     --pass-bg:#0d2818; --fail-bg:#2d1214; --flake-bg:#1d1630;
+    /* The light-theme red is far too dark on a dark card (3.39:1). */
+    --brand-text:#f0645f;   /* 5.51:1 on card, 6.03:1 on bg */
   }
 }
 
 /* ---------------------------------  base  ------------------------------- */
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 var(--sans);
+body{margin:0;background:var(--bg);color:var(--fg);font:17.5px/1.72 var(--sans);
      -webkit-font-smoothing:antialiased}
 code,kbd,pre,.mono{font-family:var(--mono)}
 a{color:var(--accent)}
@@ -75,18 +83,18 @@ nav .ext{display:inline-block;width:.62em;height:.62em;margin-left:.3em;opacity:
 .cta{display:flex;flex-wrap:wrap;gap:.7rem}
 .btn{display:inline-block;padding:.72rem 1.35rem;border-radius:.35rem;font-size:.95rem;
      font-weight:650;text-decoration:none;border:1px solid var(--line);color:var(--fg)}
-.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary{background:var(--brand-solid);border-color:var(--brand-solid);color:#fff}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn:hover{border-color:var(--muted)}
 
 /* -------------------------------  sections  ----------------------------- */
 section{padding:4rem 0}
-h3.sec{font-size:clamp(1.35rem,3vw,1.8rem);letter-spacing:-.022em;margin:0 0 .5rem;
+h3.sec{font-size:clamp(1.5rem,3.2vw,2.05rem);letter-spacing:-.022em;margin:0 0 .5rem;
        font-weight:720}
 .kicker{font-size:.7rem;font-weight:750;letter-spacing:.15em;text-transform:uppercase;
-        color:var(--muted);margin:0 0 .9rem}
-.prose{max-width:64ch}
-.prose p{margin:0 0 1rem}
+        color:var(--muted);margin:0 0 .9rem;font-size:.75rem}
+.prose{max-width:66ch;font-size:1.06rem}
+.prose p{margin:0 0 1.15rem}
 .pull{font-size:clamp(1.2rem,2.8vw,1.55rem);font-weight:640;line-height:1.35;
       border-left:3px solid var(--brand);padding-left:1.15rem;margin:1.75rem 0;max-width:44ch}
 .pull em{font-family:var(--serif);font-style:italic;font-weight:400}
@@ -101,9 +109,9 @@ h3.sec{font-size:clamp(1.35rem,3vw,1.8rem);letter-spacing:-.022em;margin:0 0 .5r
 .card{background:var(--card);border:1px solid var(--line);border-radius:.6rem;
       padding:1.2rem 1.3rem}
 .card .tag{font-size:.66rem;font-weight:750;letter-spacing:.1em;text-transform:uppercase;
-           color:var(--brand);display:block;margin-bottom:.5rem}
-.card h4{margin:0 0 .35rem;font-size:1rem}
-.card p{margin:0;color:var(--muted);font-size:.9rem}
+           color:var(--brand-text);display:block;margin-bottom:.5rem}
+.card h4{margin:0 0 .4rem;font-size:1.06rem}
+.card p{margin:0;color:var(--muted);font-size:.97rem;line-height:1.62}
 .card p code{color:var(--fg);font-size:.85em}
 
 /* -----------------------------  code blocks  ---------------------------- */
@@ -111,18 +119,18 @@ h3.sec{font-size:clamp(1.35rem,3vw,1.8rem);letter-spacing:-.022em;margin:0 0 .5r
 .termlight{background:#0b0d10;border:1px solid #23262b;border-radius:.55rem;
            overflow:hidden;margin:1.5rem 0}
 .termlight pre{margin:0;padding:1rem 1.1rem;overflow-x:auto;font-family:var(--mono);
-               font-size:.78rem;line-height:1.8;color:#c9d1d9}
-.termlight .c{color:#6e7681}.termlight .k{color:#58a6ff}.termlight .s{color:#d29922}
+               font-size:.86rem;line-height:1.75;color:#d4dae1}
+.termlight .c{color:#7d8590}.termlight .k{color:#58a6ff}.termlight .s{color:#d29922}
 .termlight .g{color:#3fb950}.termlight .r{color:#f85149}.termlight .m{color:#a371f7}
-.termlight .p{color:#6e7681;user-select:none}
+.termlight .p{color:#7d8590;user-select:none}
 .pair{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 @media(max-width:800px){.pair{grid-template-columns:1fr}}
 .pair .lbl{font-size:.76rem;color:var(--muted);margin:0 0 .4rem;font-weight:640}
 
 /* --------------------------------  tables  ------------------------------ */
 .tablewrap{overflow-x:auto;margin-top:1.5rem}
-table{border-collapse:collapse;width:100%;font-size:.9rem}
-th,td{text-align:left;padding:.55rem .75rem;border-bottom:1px solid var(--line);
+table{border-collapse:collapse;width:100%;font-size:.98rem}
+th,td{text-align:left;padding:.7rem .8rem;border-bottom:1px solid var(--line);
       vertical-align:top}
 th{color:var(--muted);font-weight:640;font-size:.7rem;text-transform:uppercase;
    letter-spacing:.08em}

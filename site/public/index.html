@@ -64,12 +64,25 @@ h1 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:
            border-bottom:1px solid var(--d-line);background:#0f1114}
 .term .dot{width:.7rem;height:.7rem;border-radius:50%}
 .term .dot.r{background:#ff5f57}.term .dot.y{background:#febc2e}.term .dot.g{background:#28c840}
-.term .title{flex:1;text-align:center;font-family:var(--mono);font-size:.78rem;color:#c3c8d0}
-.term .kbd{font-family:var(--mono);font-size:.72rem;color:#6b7280}
+.term .title{flex:1;text-align:center;font-family:var(--mono);font-size:.82rem;color:#c9d1d9}
+.term .kbd{font-family:var(--mono);font-size:.72rem;color:#8b949e}
 .term pre{margin:0;padding:1.1rem 1.15rem;overflow-x:auto;font-family:var(--mono);
-          font-size:.775rem;line-height:1.85;color:#c9d1d9}
+          font-size:.84rem;line-height:1.8;color:#d4dae1}
 .term .g{color:#3fb950}.term .r{color:#f85149}.term .m{color:#a371f7}
-.term .y{color:#d29922}.term .d{color:#6e7681}.term .w{color:#fff}
+.term .y{color:#d29922}.term .d{color:#7d8590}.term .w{color:#fff}
+
+/* --------------------------  plain-language intro  ---------------------- */
+/* Deliberately larger and looser than the technical sections below. Someone
+   who has never heard of an "eval" should be able to read this at a glance. */
+.plainprose{max-width:60ch;font-size:1.16rem;line-height:1.72}
+.plainprose p{margin:0 0 1.3rem}
+.plainprose strong{font-weight:680}
+.plainprose .highlight{font-family:var(--serif);font-style:italic;font-size:1.3rem;
+  line-height:1.5;border-left:3px solid var(--brand);padding-left:1.2rem;
+  margin:1.9rem 0;color:var(--fg)}
+.plainprose .closer{font-size:1.22rem;padding:1.1rem 1.3rem;background:var(--card);
+  border:1px solid var(--line);border-radius:.6rem;margin-top:1.9rem}
+@media(max-width:640px){.plainprose{font-size:1.08rem}}
 
 /* ----------------------------  report preview  -------------------------- */
 /* Theme-aware on purpose: it depicts the file you would actually generate. */
@@ -236,6 +249,62 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
     </div>
   </div>
 </div>
+
+<section id="plain">
+  <div class="wrap">
+    <p class="kicker">In plain terms</p>
+    <h3 class="sec">What this is, and why it matters</h3>
+
+    <div class="plainprose">
+      <p>
+        Companies are putting AI assistants in front of people at their most
+        vulnerable — a teenager in crisis at 2am, a patient who can't get a
+        doctor's appointment, someone asking a religious chatbot about their
+        marriage. Every one of those assistants is given rules: <em>never
+        pretend to be a doctor. Never tell a child to keep a secret from their
+        parents. Never claim to forgive sins.</em>
+      </p>
+      <p>
+        <strong>Those rules usually hold when you test them once.</strong> Ask
+        an AI to break one and it says no. That's how nearly all AI safety
+        testing works today: ask once, see it refuse, tick the box.
+      </p>
+      <p>
+        But that isn't how people actually talk. <strong>The rules break when
+        somebody keeps pushing.</strong> Ask a fifth time. Explain that you're
+        desperate. Say there's nobody else you can turn to. Somewhere around
+        turn five or six, the assistant that refused so cleanly at the start
+        quietly gives in — not because it heard a better argument, but because
+        refusing started to feel unkind.
+      </p>
+      <p class="highlight">
+        Every individual answer looks reasonable. The conversation as a whole
+        is a failure. And testing one question at a time cannot see it.
+      </p>
+      <p>
+        <strong>Halligan is a tool that has those conversations for you.</strong>
+        It plays the role of the person applying pressure — politely, then
+        insistently, then desperately — and watches for the exact turn where
+        the assistant's answer changes. Then it does it again, twenty times,
+        because a rule that holds nineteen times and breaks once is a rule you
+        cannot rely on.
+      </p>
+      <p>
+        It hands back a plain report: here is the conversation, here is turn
+        one where it held, here is turn six where it didn't, here is how often.
+        Developers run it automatically every time they change their AI — the
+        same way they already run tests to catch ordinary bugs — so a guardrail
+        that starts slipping gets caught before it reaches anybody.
+      </p>
+      <p class="closer">
+        Put simply: <strong>most AI safety testing asks a question. Halligan
+        has an argument.</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
 
 <section id="why">
   <div class="wrap">
