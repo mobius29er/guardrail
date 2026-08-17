@@ -73,8 +73,9 @@ nav .wrap{display:flex;align-items:center;gap:2rem;height:4rem;position:relative
 .brand .mark{width:2.1rem;height:2.1rem;display:block;object-fit:contain;flex:none}
 .brand .word{font-weight:750;letter-spacing:.16em;font-size:.86rem;text-transform:uppercase}
 nav .spacer{flex:1}
-nav a.navlink{color:var(--d-muted);text-decoration:none;font-size:.88rem;white-space:nowrap}
-nav a.navlink:hover{color:var(--d-fg)}
+nav a.navlink{color:#e3e6ea;text-decoration:none;font-size:.95rem;font-weight:520;
+              white-space:nowrap}
+nav a.navlink:hover{color:#fff}
 nav .ext{display:inline-block;width:.62em;height:.62em;margin-left:.3em;opacity:.7}
 @media(max-width:900px){nav a.navlink.hide-md{display:none}}
 @media(max-width:560px){nav .wrap{gap:1rem}nav a.navlink.hide-sm{display:none}}
@@ -94,10 +95,9 @@ nav .ext{display:inline-block;width:.62em;height:.62em;margin-left:.3em;opacity:
    the report preview, nav and footer) keep the wider wrap. */
 section .wrap{max-width:58rem}
 section{padding:4rem 0}
-h2.sec{font-size:clamp(1.5rem,3.2vw,2.05rem);letter-spacing:-.022em;margin:0 0 .5rem;
-       font-weight:720}
-.kicker{font-size:.7rem;font-weight:750;letter-spacing:.15em;text-transform:uppercase;
-        color:var(--muted);margin:0 0 .9rem;font-size:.75rem}
+h2.sec{font-size:clamp(1.95rem,4vw,2.8rem);letter-spacing:-.028em;margin:0 0 .6rem;
+       font-weight:740;line-height:1.12}
+.kicker{font-weight:750;letter-spacing:.14em;text-transform:uppercase;color:var(--brand-text);margin:0 0 .8rem;font-size:.8rem}
 .prose{max-width:none;font-size:1.06rem}
 .prose p{margin:0 0 1.15rem}
 .pull{font-size:clamp(1.2rem,2.8vw,1.55rem);font-weight:640;line-height:1.35;
@@ -111,8 +111,8 @@ h2.sec{font-size:clamp(1.5rem,3.2vw,2.05rem);letter-spacing:-.022em;margin:0 0 .
 /* A plain-language lead-in. Every technical section opens with one, so a
    reader who does not know the jargon is never stranded — they can read the
    grey paragraph, get the point, and skip the rest. */
-.plain{font-size:1.09rem;line-height:1.68;color:var(--fg);max-width:62ch;
-       border-left:3px solid var(--line);padding:.15rem 0 .15rem 1.15rem;
+.plain{font-size:1.12rem;line-height:1.68;color:var(--fg);max-width:none;
+       border-left:3px solid var(--brand-text);padding:.2rem 0 .2rem 1.2rem;
        margin:0 0 1.75rem}
 .plain strong{font-weight:670}
 .plain + .prose{margin-top:0}
@@ -124,7 +124,7 @@ h2.sec{font-size:clamp(1.5rem,3.2vw,2.05rem);letter-spacing:-.022em;margin:0 0 .
       padding:1.2rem 1.3rem}
 .card .tag{font-size:.66rem;font-weight:750;letter-spacing:.1em;text-transform:uppercase;
            color:var(--brand-text);display:block;margin-bottom:.5rem}
-.card h3{margin:0 0 .4rem;font-size:1.06rem}
+.card h3{margin:0 0 .45rem;font-size:1.15rem;font-weight:680}
 .card p{margin:0;color:var(--fg);font-size:.97rem;line-height:1.62}
 .card p code{color:var(--fg);font-size:.85em}
 
