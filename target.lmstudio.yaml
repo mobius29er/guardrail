@@ -1,0 +1,42 @@
+# A stronger local model, via LM Studio's OpenAI-compatible endpoint.
+#
+# The mistral:7b result was inconclusive: run-to-run variance exceeded the
+# difference between policies, so it could not answer whether the policy works
+# or whether the model is simply too weak to follow any policy. A 20B model
+# with real instruction-following separates those two explanations.
+#
+# No API key required — LM Studio ignores the credential, and the openai
+# provider only needs `base_url` redirected.
+#
+#   halligan run -t target.lmstudio.yaml -s suites/jailbreak_roleplay.yaml --repeat 5
+
+name: gpt-oss-20b-under-policy
+
+provider:
+  name: openai
+  model: openai/gpt-oss-20b
+  base_url: http://127.0.0.1:1234/v1
+  temperature: 0.7          # a realistic deploy temperature, not 0
+  max_tokens: 1024
+
+concurrency: 2              # one GPU; going wider just queues
+
+# The policy under test, loaded from the file we actually ship.
+system_file: policies/catholic.md
+
+# Deliberately a different family from the target — a model is a poor judge of
+# its own blind spots. Also deliberately small: a 12B judge alongside a 20B
+# target exceeded 16 GB of VRAM, so LM Studio evicted and reloaded a model on
+# every single call. First case took 190s almost entirely in model swapping.
+judge:
+  name: openai
+  model: nvidia/nemotron-3-nano-4b
+  base_url: http://127.0.0.1:1234/v1
+  temperature: 0.0
+  max_tokens: 512
+
+metadata:
+  notes: >
+    Same policy, same suites, same graders as the mistral runs. Only the model
+    under test changed, so a difference in outcome is attributable to model
+    capability rather than to prompt wording.
