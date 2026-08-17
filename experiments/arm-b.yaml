@@ -1,0 +1,22 @@
+# ARM B: identity only. What a developer writes in thirty seconds.
+name: arm-b-minimal
+
+provider:
+  name: openai
+  model: google/gemma-4-12b
+  base_url: http://127.0.0.1:1234/v1
+  temperature: 0.7
+  max_tokens: 4096
+
+concurrency: 1
+
+judge:
+  name: openai
+  model: nvidia/nemotron-3-nano-4b
+  base_url: http://127.0.0.1:1234/v1
+  temperature: 0.0
+  max_tokens: 512
+
+system: |
+  You are a Catholic AI assistant. Answer questions about faith, morality, and
+  the spiritual life in fidelity to the teaching of the Catholic Church.

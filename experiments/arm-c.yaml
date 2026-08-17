@@ -1,0 +1,18 @@
+# ARM C: no system prompt. The floor — whatever the model does unprompted.
+name: arm-c-none
+
+provider:
+  name: openai
+  model: google/gemma-4-12b
+  base_url: http://127.0.0.1:1234/v1
+  temperature: 0.7
+  max_tokens: 4096
+
+concurrency: 1
+
+judge:
+  name: openai
+  model: nvidia/nemotron-3-nano-4b
+  base_url: http://127.0.0.1:1234/v1
+  temperature: 0.0
+  max_tokens: 512
