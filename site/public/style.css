@@ -97,7 +97,7 @@ section .wrap{max-width:58rem}
 section{padding:4rem 0}
 h2.sec{font-size:clamp(1.95rem,4vw,2.8rem);letter-spacing:-.028em;margin:0 0 .6rem;
        font-weight:740;line-height:1.12}
-.kicker{font-weight:750;letter-spacing:.14em;text-transform:uppercase;color:var(--brand-text);margin:0 0 .8rem;font-size:.8rem}
+.kicker{font-size:1.05rem;font-weight:760;letter-spacing:.1em;text-transform:uppercase;color:var(--brand-text);margin:0 0 .55rem}
 .prose{max-width:none;font-size:1.06rem}
 .prose p{margin:0 0 1.15rem}
 .pull{font-size:clamp(1.2rem,2.8vw,1.55rem);font-weight:640;line-height:1.35;
