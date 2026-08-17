@@ -1,0 +1,31 @@
+# Dogfooding the shipped policy.
+#
+# Identical to target.ollama.yaml in every respect except one: the system
+# prompt is the policy we actually ship, loaded from disk rather than written
+# inline. Same model, same temperature, same judge — so a difference in score
+# is attributable to the prompt and nothing else.
+#
+#   halligan run -t target.policy-test.yaml -s suites/jailbreak_roleplay.yaml
+
+name: policy-template-under-test
+
+provider:
+  name: ollama
+  model: mistral:latest
+  temperature: 0.0
+  max_tokens: 1024
+
+concurrency: 2
+
+# The thing under test. If our own recommended policy cannot survive our own
+# probes, we should not be recommending it.
+system_file: policies/catholic.md
+
+judge:
+  name: ollama
+  model: codellama:13b-instruct
+  temperature: 0.0
+  max_tokens: 512
+
+metadata:
+  notes: A/B against target.ollama.yaml — only the system prompt differs
