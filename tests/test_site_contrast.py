@@ -5,7 +5,9 @@ button below the threshold. Three pairs were already failing when this was
 first measured, including white-on-red for the primary call to action at
 3.91:1, and a card label that failed in BOTH themes.
 
-Thresholds: 4.5:1 normal text, 3:1 large text and UI boundaries.
+Thresholds: 4.5:1 normal text, 3:1 large text and UI boundaries. Muted text is
+held to 7:1 (AAA) rather than 4.5 — it passed AA at 6.6:1 and still read as
+washed out, which is the difference between compliant and legible.
 """
 
 from __future__ import annotations
@@ -42,8 +44,8 @@ HERO, TERMINAL = "#08090a", "#0b0d10"
 # (label, foreground, background, minimum)
 PAIRS = [
     ("light body", "#1a1a1a", LIGHT, 4.5),
-    ("light muted", "#575d66", LIGHT, 4.5),
-    ("light muted on card", "#575d66", LIGHT_CARD, 4.5),
+    ("light muted", "#4d535c", LIGHT, 7.0),
+    ("light muted on card", "#4d535c", LIGHT_CARD, 7.0),
     ("light pass", "#1a7f37", LIGHT, 4.5),
     ("light fail", "#cf222e", LIGHT, 4.5),
     ("light warn", "#9a6700", LIGHT, 4.5),
@@ -51,8 +53,8 @@ PAIRS = [
     ("light flake", "#8250df", LIGHT, 4.5),
     ("light card tag", "#cf2f38", LIGHT_CARD, 4.5),
     ("dark body", "#e6edf3", DARK, 4.5),
-    ("dark muted", "#a4acb8", DARK, 4.5),
-    ("dark muted on card", "#a4acb8", DARK_CARD, 4.5),
+    ("dark muted", "#b0b8c4", DARK, 7.0),
+    ("dark muted on card", "#b0b8c4", DARK_CARD, 7.0),
     ("dark pass", "#3fb950", DARK, 4.5),
     ("dark fail", "#f85149", DARK, 4.5),
     ("dark warn", "#d29922", DARK, 4.5),
@@ -70,6 +72,8 @@ PAIRS = [
     ("terminal blue", "#58a6ff", TERMINAL, 4.5),
     ("terminal magenta", "#a371f7", TERMINAL, 4.5),
     ("primary button label", "#ffffff", "#cf2f38", 4.5),
+    # UI boundaries need 3:1. The hero hover border was 2.45:1.
+    ("hero button hover border", "#6b7280", HERO, 3.0),
 ]
 
 

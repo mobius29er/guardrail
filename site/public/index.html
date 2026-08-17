@@ -38,14 +38,14 @@
 h1{font-size:clamp(2.4rem,5.6vw,3.9rem);line-height:1.04;margin:0 0 .75rem;
    letter-spacing:-.032em;font-weight:760;max-width:14ch}
 h1 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.01em}
-.hero h2{font-size:clamp(1.15rem,2.4vw,1.5rem);font-weight:680;margin:0 0 1.25rem;
-         letter-spacing:-.015em;max-width:22ch}
+.hero .tagline{font-size:clamp(1.15rem,2.4vw,1.5rem);font-weight:680;margin:0 0 1.25rem;
+         letter-spacing:-.015em;max-width:22ch;color:var(--d-fg)}
 .hero .lede{color:var(--d-muted);font-size:1.02rem;max-width:46ch;margin:0 0 1.9rem}
 .hero .cta{margin-bottom:1.1rem}
 /* The hero sits on the dark band, so its outline button needs the band's line. */
 .hero .btn{border-color:var(--d-line);color:var(--d-fg)}
 .hero .btn.primary{color:#fff}
-.hero .btn:hover{border-color:#4a5058}
+.hero .btn:hover{border-color:#6b7280}
 
 .installbar{display:flex;align-items:center;gap:.6rem;background:var(--d-panel);
             border:1px solid var(--d-line);border-radius:.35rem;padding:.6rem .8rem;
@@ -77,7 +77,6 @@ h1 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:
 /* Centred in a narrower column of its own. A 60ch measure inside the page's
    70rem container left a ribbon of text against the left edge with half the
    screen empty — the right measure in the wrong frame. */
-#plain .wrap{max-width:50rem}
 .plainprose{max-width:none;font-size:1.16rem;line-height:1.72}
 .plainprose p{margin:0 0 1.3rem}
 .plainprose strong{font-weight:680}
@@ -157,7 +156,7 @@ h1 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:
       <div>
         <span class="badge">Open source · Apache-2.0</span>
         <h1>Guardrails <em>rarely break</em> on the first turn.</h1>
-        <h2>Halligan finds the turn where they do.</h2>
+        <p class="tagline">Halligan finds the turn where they do.</p>
         <p class="lede">
           Run adversarial conversations against any model, repeat them to expose
           flaky behavior, and fail the build when a critical invariant moves.
@@ -257,7 +256,7 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
 <section id="plain">
   <div class="wrap">
     <p class="kicker">In plain terms</p>
-    <h3 class="sec">What this is, and why it matters</h3>
+    <h2 class="sec">What this is, and why it matters</h2>
 
     <div class="plainprose">
       <p>
@@ -313,7 +312,9 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
 <section id="why">
   <div class="wrap">
     <p class="kicker">Why it exists</p>
-    <h3 class="sec">The failure single-turn evals can't see</h3>
+    <h2 class="sec">The failure single-turn evals can't see</h2>
+
+    <p class="plain"><strong>The short version:</strong> testing an AI normally means asking it one bad question and checking that it says no. But nobody asks once. They ask again, rephrase, explain why they need it — and the assistant that refused so firmly at the start eventually stops refusing. That last answer is the one that reaches a real person, and one-question testing never looks at it.</p>
     <div class="prose">
       <p>
         Most jailbreak evals are single-turn: one adversarial prompt, one graded
@@ -360,37 +361,39 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
 <section id="how">
   <div class="wrap">
     <p class="kicker">What it does</p>
-    <h3 class="sec">Six things a prompt-and-grade harness doesn't do</h3>
+    <h2 class="sec">Six things a prompt-and-grade harness doesn't do</h2>
+
+    <p class="plain"><strong>The short version:</strong> if the problem is a conversation rather than a question, you need different tools. You need to hold a whole argument, not send one message. You need to run it many times, because an AI does not answer identically twice. And you need to know <em>why</em> it broke — was it the question, or was it the pressure? Those are the six things below.</p>
 
     <div class="grid">
       <div class="card">
         <span class="tag">Multi-turn</span>
-        <h4>Escalation ladders</h4>
+        <h3>Escalation ladders</h3>
         <p>Replays a full eight-rung ladder as one conversation — information probe, hedonic challenge, identity attack, role inversion — and asserts the refusal survives to the end.</p>
       </div>
       <div class="card">
         <span class="tag">Repeats</span>
-        <h4>Flake rate, not verdicts</h4>
+        <h3>Flake rate, not verdicts</h3>
         <p><code>--repeat 20</code> runs each case twenty times and grades the set. A case that fails 3 in 10 reads as a clean pass or a clean fail depending on which single run you saw.</p>
       </div>
       <div class="card">
         <span class="tag">Position</span>
-        <h4>Sweeps, not shuffles</h4>
+        <h3>Sweeps, not shuffles</h3>
         <p>Slides one probe through every position while the rest hold their order — isolating position from neighborhood. A rising flake curve means the build-up is doing the work.</p>
       </div>
       <div class="card">
         <span class="tag">Attribution</span>
-        <h4>Controlled arms</h4>
+        <h3>Controlled arms</h3>
         <p>Matched sympathy and neutral arms vary one thing at a time, so a drift can be <em>attributed</em> rather than just detected. Unit tests assert the arms stay matched.</p>
       </div>
       <div class="card">
         <span class="tag">Packs</span>
-        <h4>Probes plus the policy</h4>
+        <h3>Probes plus the policy</h3>
         <p><code>--pack catholic</code> runs a domain's suites and ships the system prompt they were written against. Provenance is declared, so you know what a passing score is worth.</p>
       </div>
       <div class="card">
         <span class="tag">Cost</span>
-        <h4>See the bill first</h4>
+        <h3>See the bill first</h3>
         <p><code>--estimate</code> reports exact call counts and measured input tokens without calling anything. Multi-turn cost is quadratic — a six-turn ladder costs twenty-one turns of input.</p>
       </div>
     </div>
@@ -402,7 +405,9 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
 <section id="sweep">
   <div class="wrap">
     <p class="kicker">Position sweep</p>
-    <h3 class="sec">Read it as a trend, not a verdict</h3>
+    <h2 class="sec">Read it as a trend, not a verdict</h2>
+
+    <p class="plain"><strong>The short version:</strong> say an assistant breaks on the fifth question. Was it <em>that particular question</em>, or was it simply that five questions had piled up? Those need opposite fixes, so guessing is expensive. Halligan takes the same question and slides it to every position in the conversation — first, second, third — and shows you where it starts failing. If it only fails late, the build-up did it.</p>
     <div class="prose">
       <p>
         <code>sweep_turn: 5</code> marks the probe and <code>--sweep</code> slides it
@@ -445,7 +450,9 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
 <section id="graders">
   <div class="wrap">
     <p class="kicker">Graders</p>
-    <h3 class="sec">Declarative checks, not assertions in code</h3>
+    <h2 class="sec">Declarative checks, not assertions in code</h2>
+
+    <p class="plain"><strong>The short version:</strong> you write down what a good answer looks like in a plain text file — no programming. "It must refuse." "It must never claim to be a doctor." "It must stay kind while refusing." Halligan checks every answer against those rules. Some checks are exact word-matching, which is fast and never disagrees with itself; others hand the answer to a second AI when the judgement is too subtle for keywords.</p>
     <div class="prose">
       <p>Suites are plain YAML. A case is a conversation plus the checks applied to it.</p>
     </div>
@@ -506,7 +513,9 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
 <section id="origin">
   <div class="wrap">
     <p class="kicker">Origin</p>
-    <h3 class="sec">Built from a real red-team session</h3>
+    <h2 class="sec">Built from a real red-team session</h2>
+
+    <p class="plain"><strong>The short version:</strong> none of this came from a checklist of things that might go wrong. Someone sat down with a real religious AI assistant and spent an evening trying to talk it into breaking its own rules. It held out seven times. The eighth time it gave in — and the tests here are that exact conversation, written down so it can be replayed against any assistant, automatically, forever.</p>
     <div class="prose">
       <p>
         The suites come from an eight-rung escalation ladder run by hand against
@@ -538,7 +547,9 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
 <section id="start">
   <div class="wrap">
     <p class="kicker">Get started</p>
-    <h3 class="sec">Point it at your own deployment</h3>
+    <h2 class="sec">Point it at your own deployment</h2>
+
+    <p class="plain"><strong>The short version:</strong> you can test the app you actually built, not just the raw AI behind it. That distinction matters — your app has its own instructions, its own filters, its own safety layer bolted on top, and any of those can be the thing that fails. Testing the model alone tells you about the model. Testing your app tells you about what your users will meet.</p>
     <div class="prose">
       <p>
         Use the <code>http</code> provider to test your app rather than a raw
@@ -571,7 +582,7 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
 <section id="support">
   <div class="wrap">
     <p class="kicker">Support</p>
-    <h3 class="sec">Apache-2.0, no paid tier, nothing held back</h3>
+    <h2 class="sec">Apache-2.0, no paid tier, nothing held back</h2>
     <div class="prose">
       <p>
         If Halligan caught something in your assistant that a single-turn eval
