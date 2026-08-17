@@ -19,14 +19,14 @@ code{background:var(--card);border:1px solid var(--line);border-radius:.25rem;
      padding:.05rem .3rem;font-size:.9em}
 header{padding:3.5rem 0 1.5rem}
 h1{font-size:clamp(2rem,5vw,2.75rem);line-height:1.05;margin:0 0 .5rem;letter-spacing:-.03em}
-.lede{color:var(--muted);font-size:1.05rem;margin:0;max-width:52ch}
+.lede{color:var(--muted);font-size:1.14rem;margin:0;max-width:52ch}
 section{padding:2.75rem 0}
-h2{font-size:1.3rem;letter-spacing:-.02em;margin:0 0 .75rem}
+h2{font-size:clamp(1.6rem,3vw,2.05rem);letter-spacing:-.02em;margin:0 0 .75rem}
 /* Numbered step markers. */
 h2 .num{display:inline-grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;
         background:var(--fg);color:var(--bg);font-size:.85rem;margin-right:.6rem;
         vertical-align:.05rem}
-h3{font-size:1rem;margin:1.75rem 0 .5rem}
+h3{font-size:1.2rem;font-weight:680;margin:1.75rem 0 .5rem}
 p{margin:0 0 1rem;max-width:62ch}
 ul{max-width:62ch;padding-left:1.2rem}
 li{margin:.35rem 0}
@@ -73,6 +73,7 @@ footer{margin-top:2rem}
 <section>
   <div class="wrap">
     <h2><span class="num">1</span>Install and scaffold</h2>
+    <p class="plain"><strong>In plain terms:</strong> install the tool, and it writes a folder of ready-made test conversations into your project. You do not have to invent them.</p>
     <div class="term"><pre><span class="p">$ </span>pip install <span class="s">"halligan[dotenv]"</span>
 <span class="p">$ </span>halligan init --interactive</pre></div>
     <p>
@@ -100,6 +101,7 @@ footer{margin-top:2rem}
 <section>
   <div class="wrap">
     <h2><span class="num">2</span>Give it credentials</h2>
+    <p class="plain"><strong>In plain terms:</strong> the tool needs permission to talk to your AI. That password lives in a file on your machine and is never written into anything you share.</p>
     <p>
       Keys come from the environment only. Halligan never accepts one as a
       command-line argument and never writes one to disk.
@@ -122,6 +124,7 @@ footer{margin-top:2rem}
 <section>
   <div class="wrap">
     <h2><span class="num">3</span>Point it at the thing under test</h2>
+    <p class="plain"><strong>In plain terms:</strong> tell it which AI to argue with — a raw model from OpenAI or Anthropic, one running on your own computer, or the app you have actually built.</p>
 
     <h3>A raw model API</h3>
     <p>Paste in the system prompt you actually deploy — you are testing that prompt as much as the model.</p>
@@ -194,6 +197,7 @@ footer{margin-top:2rem}
 <section>
   <div class="wrap">
     <h2><span class="num">4</span>Check the bill first</h2>
+    <p class="plain"><strong>In plain terms:</strong> every question costs a fraction of a penny, and this runs thousands of them. This step tells you the price before you spend it, without spending anything.</p>
     <p>
       74 cases is 116 model calls and 65 judge calls. At
       <code>--repeat 20</code> that becomes 3,620. Look before you leap:
@@ -231,6 +235,7 @@ footer{margin-top:2rem}
 <section>
   <div class="wrap">
     <h2><span class="num">5</span>Run it</h2>
+    <p class="plain"><strong>In plain terms:</strong> it now has the arguments, watches what your AI says, and writes a report you can open in a browser.</p>
     <div class="term"><pre><span class="p">$ </span>halligan validate --suite suites/    <span class="c"># parses everything, zero API calls</span>
 <span class="p">$ </span>halligan run -t target.yaml --pack catholic --report report.html</pre></div>
     <p>
@@ -262,6 +267,7 @@ footer{margin-top:2rem}
 <section>
   <div class="wrap">
     <h2><span class="num">6</span>Make it mean something</h2>
+    <p class="plain"><strong>In plain terms:</strong> run each conversation twenty times instead of once. AIs do not answer identically twice, and a rule that only breaks sometimes is the one that will surprise you in production.</p>
     <p>
       One run tells you what happened once. It cannot tell you whether a
       guardrail <em>holds</em> or whether it is a coin flip — and those need
@@ -310,6 +316,7 @@ footer{margin-top:2rem}
 <section>
   <div class="wrap">
     <h2><span class="num">7</span>Adapt it to your domain</h2>
+    <p class="plain"><strong>In plain terms:</strong> the conversations that ship are written for a religious assistant. The <em>shape</em> of the attack transfers anywhere — swap in your own subject matter and the pressure tactics still work.</p>
     <p>
       The 74 shipped cases are a Catholic-assistant probe suite. The
       <strong>harness</strong> — runner, scoring, repeats, sweep, reporting — is
