@@ -101,6 +101,20 @@ async def run_case(
 
         try:
             ok, reason = await fn(target, transcript, check.params, ctx)
+        except ProviderError as exc:
+            # The grader could not reach a model it needed — almost always the
+            # judge. That is infrastructure, not behaviour, and scoring it as a
+            # failure invents a finding: a judge that would not load once turned
+            # a clean run into a reported 18.2%.
+            check_results.append(
+                CheckResult(
+                    kind=check.kind,
+                    outcome=Outcome.ERROR,
+                    reason=f"could not be graded: {exc}",
+                    description=check.description,
+                )
+            )
+            continue
         except Exception as exc:  # a grader bug must not abort the run
             ok, reason = False, f"grader raised {type(exc).__name__}: {exc}"
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from halligan.graders import GradeContext
+from halligan.graders import REGISTRY, GradeContext
 from halligan.models import (
     Case,
     CaseGroup,
@@ -14,6 +14,7 @@ from halligan.models import (
     Severity,
     Suite,
 )
+from halligan.providers.base import ProviderError
 from halligan.runner import run_case, select_cases
 from helpers import FakeProvider, make_run
 
@@ -98,15 +99,21 @@ class TestRunCase:
         assert len(provider.calls) == 2
 
     async def test_unknown_grader_is_reported_not_raised(self):
+        """A misconfigured check errors rather than fails — it graded nothing.
+
+        `halligan validate` catches this before a run costs anything, so the
+        runner only has to be honest about it: a check that never executed did
+        not observe the model doing something wrong.
+        """
         case = Case(id="c", turns=["a"], checks=[Check(kind="nonexistent")])
         result = await run_case(case, FakeProvider([REFUSAL]), CTX)
-        assert result.outcome is Outcome.FAIL
+        assert result.outcome is Outcome.ERROR
         assert "unknown grader" in result.checks[0].reason
 
     async def test_out_of_range_turn_is_reported(self):
         case = Case(id="c", turns=["a"], checks=[Check(kind="refuses", turn=5)])
         result = await run_case(case, FakeProvider([REFUSAL]), CTX)
-        assert result.outcome is Outcome.FAIL
+        assert result.outcome is Outcome.ERROR
         assert "targets turn 5" in result.checks[0].reason
 
     async def test_turn_zero_targets_first_response(self):
@@ -335,3 +342,58 @@ class TestSelectCases:
         picked = select_cases([self._suite()], filter_id="swept", sweep=True)
         assert len(picked) == 3
         assert all(c.sweep_base == "swept-case" for c in picked)
+
+
+class TestUngradableIsNotAFailure:
+    """A judge that cannot be reached has produced no verdict, not a bad one.
+
+    Observed live against LM Studio: the judge model would not load, every
+    judge check returned "judge model failed", and a run with ZERO behavioural
+    failures reported a score of 18.2%. That number would have you distrust a
+    model that was behaving correctly, or ship a fix for nothing.
+
+    The runner already applied this rule to the target model — CaseGroup treats
+    a provider outage as ERROR and excludes it from scoring. It just did not
+    apply it to the graders.
+    """
+
+    @staticmethod
+    def _boom_grader():
+        async def fn(response, transcript, params, ctx):
+            raise ProviderError("HTTP 400: Failed to load model")
+
+        return fn
+
+    async def test_provider_error_in_a_grader_errors_the_check(self, monkeypatch):
+        monkeypatch.setitem(REGISTRY, "explodes", self._boom_grader())
+        case = Case(id="c", turns=["x"], checks=[Check(kind="explodes")])
+        result = await run_case(case, FakeProvider([REFUSAL]), CTX)
+        assert result.checks[0].outcome is Outcome.ERROR
+        assert "could not be graded" in result.checks[0].reason
+
+    async def test_an_ungradable_check_errors_the_run(self, monkeypatch):
+        monkeypatch.setitem(REGISTRY, "explodes", self._boom_grader())
+        case = Case(id="c", turns=["x"], checks=[Check(kind="explodes")])
+        result = await run_case(case, FakeProvider([REFUSAL]), CTX)
+        assert result.outcome is Outcome.ERROR, "ungradable must not read as failed"
+
+    async def test_it_does_not_drag_down_the_score(self, monkeypatch):
+        """The whole point: an unreachable judge must not invent a low score."""
+        monkeypatch.setitem(REGISTRY, "explodes", self._boom_grader())
+        case = Case(id="c", turns=["x"], checks=[Check(kind="explodes")])
+        result = await run_case(case, FakeProvider([REFUSAL]), CTX)
+        group = CaseGroup(case=case, runs=[result])
+        assert group.outcome is Outcome.ERROR
+        assert group.flake_rate == 0.0, "an outage is not flakiness"
+
+    async def test_a_real_grader_bug_still_fails(self, monkeypatch):
+        """Only provider outages get the exemption — a broken grader is a failure."""
+
+        async def buggy(response, transcript, params, ctx):
+            raise ValueError("bad regex")
+
+        monkeypatch.setitem(REGISTRY, "buggy", buggy)
+        case = Case(id="c", turns=["x"], checks=[Check(kind="buggy")])
+        result = await run_case(case, FakeProvider([REFUSAL]), CTX)
+        assert result.checks[0].outcome is Outcome.FAIL
+        assert "grader raised ValueError" in result.checks[0].reason

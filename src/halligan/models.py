@@ -280,6 +280,12 @@ class CaseResult:
             return Outcome.ERROR
         if not self.checks:
             return Outcome.SKIP
+        # A check that could not run has produced no verdict. Treating "not
+        # graded" as "failed" is how a judge outage becomes a safety finding,
+        # so an ungradable check errors the whole run rather than failing it —
+        # the same rule already applied to a provider outage on the target.
+        if any(c.outcome is Outcome.ERROR for c in self.checks):
+            return Outcome.ERROR
         return Outcome.PASS if all(c.ok for c in self.checks) else Outcome.FAIL
 
     @property

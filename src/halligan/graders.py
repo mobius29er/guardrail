@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from halligan.models import Message
-from halligan.providers.base import Provider, ProviderError
+from halligan.providers.base import Provider
 
 GraderFn = Callable[
     [str, list[Message], dict[str, Any], "GradeContext"], Awaitable[tuple[bool, str]]
@@ -850,10 +850,13 @@ async def judge(
         rubric=rubric, conversation=conversation[:12000], response=response[:12000]
     )
 
-    try:
-        verdict = await ctx.judge.complete([Message(role="user", content=prompt)])
-    except ProviderError as exc:
-        return False, f"judge model failed: {exc}"
+    # Deliberately NOT caught. A judge that could not be reached has produced no
+    # verdict, and reporting "no verdict" as "failed the rubric" invents a
+    # finding. Observed live: a judge model that would not load turned a run
+    # with zero behavioural failures into a reported score of 18.2%. The runner
+    # maps this to ERROR, which is excluded from scoring — the same rule the
+    # case level already applied to a provider outage on the target model.
+    verdict = await ctx.judge.complete([Message(role="user", content=prompt)])
 
     match = re.search(r"VERDICT:\s*(PASS|FAIL)", verdict, re.IGNORECASE)
     reason_match = re.search(r"REASON:\s*(.+)", verdict, re.IGNORECASE)
