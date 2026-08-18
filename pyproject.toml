@@ -35,7 +35,12 @@ dotenv = ["python-dotenv>=1.0"]
 dev = [
   "pytest>=8.0",
   "pytest-asyncio>=0.23",
-  "ruff>=0.6",
+  # Pinned, not floated. CI ran ruff format --check with whatever was newest
+  # while pre-commit pinned v0.8.4, and 0.16 joins implicitly-concatenated
+  # strings that 0.8 left alone — so the local hook passed and CI failed on
+  # a file the hook had just approved. Bump this and the pre-commit rev in
+  # the same commit.
+  "ruff==0.16.3",
   "python-dotenv>=1.0",
 ]
 

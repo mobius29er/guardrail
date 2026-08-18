@@ -54,8 +54,7 @@ def test_local_endpoint_needs_no_key(base):
     url, headers, _ = provider._build_request(MESSAGES)
     assert url.startswith(base.rstrip("/"))
     assert headers["authorization"].startswith("Bearer "), (
-        "send the header anyway — some local servers parse it even though they "
-        "do not validate it"
+        "send the header anyway — some local servers parse it even though they do not validate it"
     )
 
 
