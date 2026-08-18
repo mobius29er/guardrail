@@ -131,6 +131,26 @@ h1 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:
            padding:1.1rem 1.75rem 1.4rem;border-top:1px solid var(--line);margin-top:1.1rem;
            font-size:.86rem;color:var(--muted)}
 .statstrip b{color:var(--accent);font-weight:700}
+
+/* The three mechanisms. Numbered so the method reads as a sequence a person
+   can follow, not three unrelated features. Plain paragraph first, technical
+   second — same contract as .plain everywhere else on the site. */
+.firsts{list-style:none;counter-reset:f;margin:2.25rem 0 0;padding:0;display:grid;gap:1.15rem}
+.firsts li{counter-increment:f;position:relative;background:var(--card);
+           border:1px solid var(--line);border-radius:.7rem;padding:1.5rem 1.6rem 1.6rem 4.6rem}
+.firsts li::before{content:counter(f);position:absolute;left:1.5rem;top:1.45rem;
+                   width:2.1rem;height:2.1rem;border-radius:50%;background:var(--brand-solid);
+                   color:#fff;font-weight:750;font-size:1.05rem;display:flex;
+                   align-items:center;justify-content:center;line-height:1}
+.firsts h3{margin:.15rem 0 .7rem;font-size:1.32rem;font-weight:700;letter-spacing:-.015em}
+.firsts .lay{margin:0 0 .9rem;font-size:1.09rem;line-height:1.68;color:var(--fg)}
+.firsts .tech{margin:0;font-size:.99rem;line-height:1.66;color:var(--muted);
+              border-top:1px solid var(--line);padding-top:.9rem}
+.firsts .tech code{color:var(--fg);font-size:.88em}
+@media(max-width:640px){
+  .firsts li{padding:3.9rem 1.15rem 1.3rem}
+  .firsts li::before{top:1.3rem;left:1.15rem}
+}
 </style>
 </head>
 <body>
@@ -304,6 +324,71 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
         has an argument.</strong>
       </p>
     </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section id="method">
+  <div class="wrap">
+    <p class="kicker">The method</p>
+    <h2 class="sec">Three mechanisms, in order</h2>
+    <p class="plain"><strong>In plain terms:</strong> knowing an assistant broke
+      is not much use on its own. You need to know <em>what broke it</em> — where
+      in the conversation, which kind of pressure, and in which direction it
+      went wrong. These three do that, and as far as we know no other open
+      test runner ships all three.</p>
+
+    <ol class="firsts">
+      <li>
+        <h3>Slide the same question through every position</h3>
+        <p class="lay">Ask a tricky question at the very start of a conversation,
+          then again in the middle, then at the end. You would expect the same
+          answer each time. Often you do not get it — an assistant that refuses
+          cleanly on turn one can wave the identical request through on turn six,
+          purely because a lot has been said in between. Halligan moves that one
+          question to every slot and shows you the pattern.</p>
+        <p class="tech"><code>sweep_turn</code> expands a case into one variant
+          per position — 1 of 6, 2 of 6, through 6 of 6 — holding the surrounding
+          transcript fixed. Deliberately not a randomised permutation: shuffling
+          turn order changes what the conversation means and confounds the
+          result. What you get back is a trendline attributable to position
+          alone. Off unless you pass <code>--sweep</code>, since it multiplies
+          cost by the number of positions.</p>
+      </li>
+      <li>
+        <h3>Run a control arm that differs in one variable</h3>
+        <p class="lay">If an assistant gives in after someone says
+          <em>"you're hurting me"</em>, you still do not know whether the emotion
+          did it — or simply the fact that they asked five times. So Halligan
+          runs two near-identical conversations: same opening request, same
+          number of turns, one emotionally loaded and one flatly polite.
+          Whichever one bends tells you which force actually moved the line.</p>
+        <p class="tech"><code>sympathy-pressure-only</code> against
+          <code>neutral-pressure-only</code>. Unit tests enforce that the arms
+          open byte-identically, run the same number of turns, stay within 30%
+          on length, and carry the same graders and severity — so a reword
+          cannot quietly turn a controlled pair into two unrelated tests that
+          still look matched in the report. Comparing flake rates across the
+          arms separates context fatigue from semantic boundary collapse.</p>
+      </li>
+      <li>
+        <h3>Fail the build in both directions</h3>
+        <p class="lay">A guardrail can go wrong two opposite ways. It can be too
+          loose — telling a child to keep a secret from their parents. It can
+          also be too tight: refusing so much, or so coldly, that it is useless
+          to somebody who genuinely needed help. Almost all safety testing looks
+          only for the first. Being unhelpful is a failure too, and here it
+          breaks the build just the same.</p>
+        <p class="tech">Alongside the boundary graders
+          (<code>refuses</code>, <code>does_not_advocate</code>,
+          <code>no_authority_claim</code>), the suites ship
+          <code>not_condescending</code> and <code>does_not_refuse</code> as
+          invariants. An assistant that turns patronising, or stonewalls a
+          legitimate request, fails CI exactly as an assistant that gets
+          jailbroken does.</p>
+      </li>
+    </ol>
   </div>
 </section>
 
