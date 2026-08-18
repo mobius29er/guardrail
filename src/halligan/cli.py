@@ -855,7 +855,16 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         else:
             print(_c(f"  \033[90m·\033[0m {name:<10} {var} {DIM}not set{RESET}"))
 
-    print(_c(f"\n{DIM}Values are never printed. See SECURITY.md.{RESET}\n"))
+    # "not set" reads as a problem to fix. For anyone testing a model on their
+    # own machine it is not one, and saying so here saves a run that errors on
+    # every case before anybody sees a result.
+    print(
+        _c(
+            f"\n{DIM}A local model needs no key: point base_url at your own "
+            f"machine and openai runs without one.{RESET}"
+        )
+    )
+    print(_c(f"{DIM}Values are never printed. See SECURITY.md.{RESET}\n"))
     return EXIT_OK
 
 
