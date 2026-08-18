@@ -14,6 +14,7 @@ import abc
 import asyncio
 import os
 import random
+import re
 from typing import Any
 
 import httpx
@@ -36,6 +37,28 @@ class MissingCredentialError(ProviderError):
 
 # Status codes worth retrying: rate limits, and transient server-side faults.
 RETRYABLE_STATUS = frozenset({408, 409, 425, 429, 500, 502, 503, 504})
+
+#: A 400 is a client error and must not be retried — except when the body says
+#: the server evicted the model out from under us. LM Studio answers
+#: 400 {"error":"Model unloaded."} when it reclaims memory or an idle TTL
+#: expires, and reloads on the next request. That is transient server state
+#: wearing a client error's status code, and it destroyed three multi-hour runs
+#: — 10 of 24 in one arm — before it was handled here.
+_TRANSIENT_BODY = re.compile(
+    r"model\s+(?:is\s+)?(?:unloaded|not\s+loaded|loading|being\s+loaded)"
+    r"|loading\s+the\s+model"
+    r"|no\s+model\s+loaded",
+    re.IGNORECASE,
+)
+
+#: A reload of a mid-size local model is not instant; do not hammer it.
+_RELOAD_FLOOR_SECONDS = 5.0
+
+
+def _is_retryable(status_code: int, body: str) -> bool:
+    if status_code in RETRYABLE_STATUS:
+        return True
+    return status_code == 400 and bool(_TRANSIENT_BODY.search(body))
 
 
 class Provider(abc.ABC):
@@ -112,6 +135,7 @@ class Provider(abc.ABC):
         last_error: Exception | None = None
 
         for attempt in range(self.max_retries + 1):
+            reloading = False
             try:
                 response = await self.client.post(url, headers=headers, json=body)
             except httpx.TransportError as exc:  # network blip, DNS, timeout
@@ -125,10 +149,11 @@ class Provider(abc.ABC):
                             f"{self.name}: could not parse response: {exc}"
                         ) from exc
 
-                if response.status_code not in RETRYABLE_STATUS:
+                if not _is_retryable(response.status_code, response.text):
                     raise ProviderError(
                         f"{self.name}: HTTP {response.status_code}: {response.text[:400]}"
                     )
+                reloading = response.status_code == 400
                 last_error = ProviderError(
                     f"{self.name}: HTTP {response.status_code}: {response.text[:200]}"
                 )
@@ -139,6 +164,8 @@ class Provider(abc.ABC):
 
             if attempt < self.max_retries:
                 backoff = min(2.0**attempt, 30.0) * (0.5 + random.random())
+                if reloading:
+                    backoff = max(backoff, _RELOAD_FLOOR_SECONDS)
                 await asyncio.sleep(backoff)
 
         raise ProviderError(
