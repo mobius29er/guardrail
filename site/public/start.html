@@ -31,10 +31,11 @@ p{margin:0 0 1rem;max-width:62ch}
 ul{max-width:62ch;padding-left:1.2rem}
 li{margin:.35rem 0}
 /* The page's own code blocks reuse .termlight from the shared sheet. */
-.term{background:#0b0d10;border:1px solid #23262b;border-radius:.6rem;overflow:hidden;
+.term{background:#0b0d10;border:1px solid #23262b;border-radius:.6rem;overflow:hidden;max-width:100%;min-width:0;
       margin:1.1rem 0}
 .term pre{margin:0;padding:1rem 1.1rem;overflow-x:auto;font-size:.82rem;line-height:1.7;
           font-family:var(--mono);color:#c9d1d9}
+@media(max-width:560px){.term pre{font-size:.76rem;padding:.85rem .9rem}}
 .term .p{color:#8b949e;user-select:none}
 .term .c{color:#8b949e}
 .term .k{color:#58a6ff}.term .s{color:#d29922}.term .g{color:#3fb950}.term .r{color:#f85149}

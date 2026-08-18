@@ -131,15 +131,16 @@ h2.sec{font-size:clamp(1.95rem,4vw,2.8rem);letter-spacing:-.028em;margin:0 0 .6r
 /* -----------------------------  code blocks  ---------------------------- */
 /* Always dark, on every page and in both themes — a terminal is a terminal. */
 .termlight{background:#0b0d10;border:1px solid #23262b;border-radius:.55rem;
-           overflow:hidden;margin:1.5rem 0}
+           overflow:hidden;margin:1.5rem 0;max-width:100%;min-width:0}
 .termlight pre{margin:0;padding:1rem 1.1rem;overflow-x:auto;font-family:var(--mono);
                font-size:.86rem;line-height:1.75;color:#d4dae1}
 .termlight .c{color:#7d8590}.termlight .k{color:#58a6ff}.termlight .s{color:#d29922}
 .termlight .g{color:#3fb950}.termlight .r{color:#f85149}.termlight .m{color:#a371f7}
 .termlight .p{color:#7d8590;user-select:none}
-.pair{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-@media(max-width:800px){.pair{grid-template-columns:1fr}}
+.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem}
+@media(max-width:800px){.pair{grid-template-columns:minmax(0,1fr)}}
 .pair .lbl{font-size:.76rem;color:var(--muted);margin:0 0 .4rem;font-weight:640}
+@media(max-width:560px){.termlight pre{font-size:.78rem;padding:.85rem .9rem}}
 
 /* --------------------------------  tables  ------------------------------ */
 .tablewrap{overflow-x:auto;margin-top:1.5rem}

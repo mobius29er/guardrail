@@ -88,6 +88,12 @@ include = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# tests/test_grader_accuracy.py imports tests.fixtures.roleplay_corpus, which
+# only resolves when the repo root is on sys.path. `python -m pytest` puts it
+# there implicitly; the bare `pytest` CI runs does not, so the suite passed
+# locally and failed on every runner. Make pytest do it regardless of how it
+# is invoked.
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100
