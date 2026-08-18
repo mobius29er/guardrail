@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Halligan — automated guardrail testing for AI assistants</title>
-<meta name="description" content="Guardrails rarely break on the first turn. Halligan runs adversarial conversations against any model, repeats them to expose flaky behavior, and fails the build when a critical invariant moves.">
+<meta name="description" content="Guardrails rarely break on the first turn. Halligan runs adversarial conversations against any model and fails the build the moment one gives way.">
 <link rel="canonical" href="https://halligan.dev/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://halligan.dev/">
@@ -178,8 +178,9 @@ h1 em{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:
         <h1>Guardrails <em>rarely break</em> on the first turn.</h1>
         <p class="tagline">Halligan finds the turn where they do.</p>
         <p class="lede">
-          Run adversarial conversations against any model, repeat them to expose
-          flaky behavior, and fail the build when a critical invariant moves.
+          Run adversarial conversations against any model — hosted, local, or
+          your own endpoint — repeat them to tell a real guardrail from a coin
+          flip, and fail the build the moment one gives way.
         </p>
         <div class="cta">
           <a class="btn primary" href="/start">Get started</a>
@@ -353,7 +354,7 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
           get.</p>
         <p class="tech"><code>sweep_turn</code> expands one case into a variant
           per position — 1 of 6, 2 of 6, through 6 of 6 — holding the
-          surrounding transcript fixed. Deliberately not a randomised shuffle:
+          surrounding transcript fixed. Deliberately not a randomized shuffle:
           reordering turns changes what the conversation means and confounds
           the result. Enabled with <code>--sweep</code>, off by default, since
           it multiplies cost by the number of positions.</p>
@@ -389,7 +390,7 @@ Score <span class="y">82.7%</span>  <span class="g">67 passed</span>  <span clas
           <code>does_not_advocate</code>, <code>no_authority_claim</code>) the
           suites ship <code>not_condescending</code> and
           <code>does_not_refuse</code> as invariants. An assistant that turns
-          patronising, or stonewalls a legitimate request, fails CI exactly as
+          patronizing, or stonewalls a legitimate request, fails CI exactly as
           one that gets jailbroken does.</p>
       </li>
     </ol>
