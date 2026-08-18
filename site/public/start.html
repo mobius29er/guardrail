@@ -102,7 +102,7 @@ footer{margin-top:2rem}
 <section>
   <div class="wrap">
     <h2><span class="num">2</span>Give it credentials</h2>
-    <p class="plain"><strong>In plain terms:</strong> the tool needs permission to talk to your AI. That password lives in a file on your machine and is never written into anything you share.</p>
+    <p class="plain"><strong>In plain terms:</strong> the tool needs permission to talk to your AI. That password lives in a file on your machine and is never written into anything you share. If you are running a model on your own computer, there is no password to set — skip to the next step.</p>
     <p>
       Keys come from the environment only. Halligan never accepts one as a
       command-line argument and never writes one to disk.
@@ -112,6 +112,14 @@ footer{margin-top:2rem}
 <span class="k">OPENAI_API_KEY</span>=sk-proj-...
 
 <span class="p">$ </span>halligan doctor   <span class="c"># reports which keys are present, never their values</span></pre></div>
+    <div class="note">
+      <strong>Running the model locally? No key needed.</strong> When
+      <code>base_url</code> points at your own machine or LAN — LM Studio,
+      Ollama, vLLM — Halligan skips the credential check entirely. Hosted
+      gateways that speak the same dialect (Together, Groq, OpenRouter) still
+      require their key, and will say so.
+    </div>
+
     <div class="note imp">
       <strong>Never put a key in <code>target.yaml</code>.</strong> That file is
       meant to be committed — it is your test configuration, and it is not

@@ -8,9 +8,24 @@ from __future__ import annotations
 
 import os
 from typing import Any
+from urllib.parse import urlparse
 
 from halligan.models import Message
 from halligan.providers.base import Provider, ProviderError
+
+#: Hosts that serve a model off your own machine or LAN and have no key to give.
+#: Deliberately narrow — Together, Groq and OpenRouter all speak this dialect and
+#: all genuinely require a key, so they must keep failing loudly without one.
+_SELF_HOSTED_HOSTS = frozenset({"localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"})
+
+
+def _is_self_hosted(base_url: str) -> bool:
+    host = urlparse(base_url).hostname or ""
+    return (
+        host in _SELF_HOSTED_HOSTS
+        or host.endswith(".local")
+        or host.startswith(("192.168.", "10."))
+    )
 
 
 class OpenAIProvider(Provider):
@@ -50,8 +65,19 @@ class OpenAIProvider(Provider):
         }
         body.update(extra)
 
+        # A self-hosted endpoint has no key to demand. LM Studio, Ollama and
+        # vLLM ignore the header entirely, and the docs tell people to point
+        # `base_url` at localhost — so requiring OPENAI_API_KEY there turned the
+        # documented local-model workflow into an error about a credential the
+        # server never wanted. Every case in a run errored out on it.
+        #
+        # If a self-hosted gateway does want a key, setting the env var still
+        # sends it; this only stops us insisting on one nobody can supply.
+        key = os.environ.get(self.env_var or "", "").strip()
+        if not key and not _is_self_hosted(base):
+            key = self._require_key()  # raises, with the copy-.env.example hint
         headers = {
-            "authorization": f"Bearer {self._require_key()}",
+            "authorization": f"Bearer {key or 'not-needed'}",
             "content-type": "application/json",
         }
         return f"{base.rstrip('/')}/chat/completions", headers, body
