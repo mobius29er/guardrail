@@ -15,7 +15,7 @@
 <style>
 /* About page only. */
 :root{--wrap:48rem}
-header{padding:3.5rem 0 1.5rem}
+main>header{padding:3.5rem 0 1.5rem}
 h1{font-size:clamp(2rem,5vw,2.75rem);line-height:1.05;margin:0 0 .5rem;letter-spacing:-.03em}
 .lede{color:var(--muted);font-size:1.14rem;margin:0}
 section{padding:2.5rem 0}
@@ -34,6 +34,9 @@ footer{margin-top:2rem}
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site">
 <nav>
   <div class="wrap">
     <a class="brand" href="/">
@@ -47,6 +50,9 @@ footer{margin-top:2rem}
     <a class="navlink" href="https://github.com/mobius29er/halligan">GitHub<svg class="ext" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3H3v10h10v-3M10 2h4v4M14 2 7 9"/></svg></a>
   </div>
 </nav>
+</header>
+
+<main id="main">
 
 <header>
   <div class="wrap">
@@ -140,6 +146,8 @@ footer{margin-top:2rem}
     </p>
   </div>
 </section>
+
+</main>
 
 <footer>
   <div class="wrap cols">

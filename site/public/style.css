@@ -63,9 +63,22 @@ a{color:var(--accent)}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:0 1.5rem}
 .rule{border:0;border-top:1px solid var(--line);margin:0}
 
+/* ----------------------------  skip link  ------------------------------- */
+/* First thing in the tab order on every page. Parked off-screen rather than
+   display:none, because a hidden element cannot be focused and a skip link
+   you cannot focus is no skip link at all. */
+.skip{position:absolute;left:-100vw;top:0;z-index:30;padding:.7rem 1.15rem;
+      background:var(--brand-solid);color:#fff;font-size:.95rem;font-weight:650;
+      text-decoration:none;border-radius:0 0 .35rem 0}
+.skip:focus{left:0}
+
 /* ---------------------------------  nav  -------------------------------- */
-/* Dark on every page, so the brand bar is one consistent thing site-wide. */
-nav{position:sticky;top:0;z-index:20;background:rgba(8,9,10,.86);
+/* Dark on every page, so the brand bar is one consistent thing site-wide.
+   The sticky sits on the banner rather than the nav: a sticky child only
+   sticks within its parent's box, so leaving it on the nav would unstick the
+   bar the moment its wrapper scrolled past. */
+header.site{position:sticky;top:0;z-index:20}
+nav{background:rgba(8,9,10,.86);
     backdrop-filter:blur(12px);border-bottom:1px solid var(--d-line)}
 nav .wrap{display:flex;align-items:center;gap:2rem;height:4rem;position:relative;
           max-width:70rem}
@@ -169,7 +182,7 @@ footer a:hover{color:var(--fg)}
    being pasted into three <style> blocks. Each page still sets its own
    --wrap, because a policy is read start to finish and wants a shorter line
    than a landing page does. */
-.legal header{padding:3.5rem 0 1.5rem}
+.legal main>header{padding:3.5rem 0 1.5rem}
 .legal h1{font-size:clamp(2rem,5vw,2.75rem);line-height:1.05;margin:0 0 .5rem;
           letter-spacing:-.03em}
 .legal .lede{color:var(--muted);font-size:1.14rem;margin:0}
