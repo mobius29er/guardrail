@@ -162,3 +162,48 @@ footer .cols{display:flex;flex-wrap:wrap;gap:2.5rem;justify-content:space-betwee
              max-width:70rem}
 footer a{color:var(--muted)}
 footer a:hover{color:var(--fg)}
+
+/* -----------------------------  legal pages  ---------------------------- */
+/* /privacy, /terms, /security. All three share one shape — header, summary
+   box, then a numbered spine of sections — so the rules live here rather than
+   being pasted into three <style> blocks. Each page still sets its own
+   --wrap, because a policy is read start to finish and wants a shorter line
+   than a landing page does. */
+.legal header{padding:3.5rem 0 1.5rem}
+.legal h1{font-size:clamp(2rem,5vw,2.75rem);line-height:1.05;margin:0 0 .5rem;
+          letter-spacing:-.03em}
+.legal .lede{color:var(--muted);font-size:1.14rem;margin:0}
+.legal .updated{font-size:.85rem;color:var(--muted);margin:1rem 0 0}
+.legal section{padding:2.5rem 0}
+.legal section .wrap{max-width:var(--wrap)}
+.legal h2{font-size:clamp(1.45rem,3vw,1.85rem);letter-spacing:-.02em;margin:0 0 .8rem;
+          scroll-margin-top:5rem}
+.legal h3{font-size:1.08rem;font-weight:680;margin:1.8rem 0 .55rem}
+.legal p{margin:0 0 1.1rem;font-size:1.04rem}
+.legal ul,.legal ol{margin:0 0 1.15rem;padding-left:1.35rem}
+.legal li{margin:0 0 .55rem;font-size:1.04rem}
+.legal li::marker{color:var(--muted)}
+
+/* The plain-English summary that opens every legal page. It is a summary, not
+   the agreement — the section that follows is what binds — but a policy no
+   one reads protects no one. */
+.legal .tldr{background:var(--card);border:1px solid var(--line);
+             border-left:3px solid var(--brand-text);border-radius:.6rem;
+             padding:1.25rem 1.4rem;margin:0 0 2rem}
+.legal .tldr strong{display:block;font-size:.7rem;font-weight:750;
+                    letter-spacing:.1em;text-transform:uppercase;
+                    color:var(--brand-text);margin-bottom:.6rem}
+.legal .tldr p:last-child,.legal .tldr ul:last-child{margin-bottom:0}
+
+/* Contents. Anchors rather than a sidebar: two columns of links at the top
+   of a document that is only ever going to be a few screens long. */
+.legal .toc{list-style:none;padding:0;margin:0 0 1rem;columns:2;column-gap:2rem}
+.legal .toc li{margin:0 0 .4rem;font-size:.97rem;break-inside:avoid}
+@media(max-width:560px){.legal .toc{columns:1}}
+
+/* Used for the "we do not do X" lists, where the point is the absence. */
+.legal .none li{list-style:none;position:relative}
+.legal .none li::before{content:"—";position:absolute;left:-1.35rem;color:var(--muted)}
+
+.legal .addr{font-style:normal;color:var(--fg);margin:0 0 1.1rem;font-size:1.04rem}
+.legal footer{margin-top:2rem}

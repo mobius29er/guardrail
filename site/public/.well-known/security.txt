@@ -1,0 +1,13 @@
+# Halligan — halligan.dev
+# Security contact details, per RFC 9116.
+#
+# Report privately. GitHub advisories are preferred: the report, the fix and
+# the credit all stay in one place. Full policy, scope and safe harbour terms
+# are at https://halligan.dev/security
+
+Contact: https://github.com/mobius29er/halligan/security/advisories/new
+Contact: mailto:support@foxxception.com
+Expires: 2027-08-20T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://halligan.dev/.well-known/security.txt
+Policy: https://halligan.dev/security

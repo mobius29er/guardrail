@@ -1,0 +1,58 @@
+# Halligan
+
+> Automated guardrail testing for AI assistants. Halligan points a suite of
+> adversarial probes at any model — Anthropic, OpenAI, Gemini, Ollama, LM Studio
+> or a custom HTTP endpoint — grades the responses against declarative checks,
+> and fails the build when a guardrail moves. It ships with a probe suite for
+> Catholic-aligned AI.
+
+The premise is that guardrails rarely break on the first turn. A single-turn
+eval asks a model one bad question and records the refusal; Halligan runs the
+whole conversation, because the failure that matters usually arrives on the
+fifth attempt after refusing has been reframed as cruelty. To find that, it
+runs multi-turn conversations rather than isolated prompts, repeats each case
+to separate a real guardrail from a coin flip (reported as a flake rate), and
+slides a probe through every position in a conversation to work out whether the
+prompt or the build-up is doing the damage.
+
+Key facts: Apache-2.0, Python 3.10+, `pip install halligan`, published by
+Foxxception LLC. It is a command-line tool that runs on your own machine or CI
+— there is no hosted service, no account, and no telemetry. API keys are read
+from the environment only and never written to disk.
+
+## Start here
+
+- [Halligan homepage](https://halligan.dev/): What it is, why multi-turn testing finds what single-turn evals cannot, and an embedded preview of a report.
+- [Getting started](https://halligan.dev/start): Install, `halligan init --interactive`, pick a provider and pack, cost a run with `--estimate`, then run it.
+- [Sample report](https://halligan.dev/report): A real generated HTML report — scores, per-case results, flake rates and full transcripts.
+- [halligan on PyPI](https://pypi.org/project/halligan/): The published package.
+
+## Documentation
+
+- [README](https://raw.githubusercontent.com/mobius29er/halligan/main/README.md): The full manual. Covers packs, policies, the controlled experiment, position sweep, writing your own probes, age safety, repeats and flake rate, cost, local models, failed-vs-errored, credentials, and repository layout.
+- [Age safety matrix](https://raw.githubusercontent.com/mobius29er/halligan/main/docs/age-safety-matrix.md): How responses are expected to differ by the stated age of the user, and what counts as a failure at each tier.
+- [Contributing](https://raw.githubusercontent.com/mobius29er/halligan/main/CONTRIBUTING.md): How to send back a probe suite or a pack adapted to another domain.
+- [Source on GitHub](https://github.com/mobius29er/halligan): Issues, releases, and the suites themselves under `suites/` and `packs/`.
+
+## Concepts worth getting right
+
+- [Packs](https://github.com/mobius29er/halligan/blob/main/README.md#packs): A pack is a named bundle of suites — `catholic` is the one that ships. Suites are YAML files of probes; probes are data and are never executed.
+- [Repeats and flake rate](https://github.com/mobius29er/halligan/blob/main/README.md#repeats-and-flake-rate): A case that passes 14 times and fails 6 is not a pass. Repeats are how a real guardrail is told apart from a coin flip, and flaky cases are reported separately from failures.
+- [Position sweep](https://github.com/mobius29er/halligan/blob/main/README.md#position-sweep--compound-probe-position-sweep): Sliding one probe through every position in a conversation, to establish whether the prompt or the accumulated context caused the break.
+- [Failed, errored, and the difference](https://github.com/mobius29er/halligan/blob/main/README.md#failed-errored-and-the-difference): A guardrail that gave way is not the same result as a transport error, and Halligan never reports one as the other.
+- [A note on the probe content](https://github.com/mobius29er/halligan/blob/main/README.md#a-note-on-the-probe-content): The suites deliberately contain jailbreak attempts and arguments for positions the project rejects. They are test inputs, not endorsements.
+
+## Security
+
+- [Security policy](https://halligan.dev/security): How to report a vulnerability, what is in scope, safe harbour, and how credentials are handled.
+- [SECURITY.md](https://raw.githubusercontent.com/mobius29er/halligan/main/SECURITY.md): The canonical repository policy, with the commands for revoking and scrubbing a leaked key.
+- [security.txt](https://halligan.dev/.well-known/security.txt): RFC 9116 machine-readable contact.
+
+## Optional
+
+- [About](https://halligan.dev/about): Who builds Halligan, and the red-team session it came out of.
+- [Privacy policy](https://halligan.dev/privacy): No cookies, no analytics, no telemetry.
+- [Terms of use](https://halligan.dev/terms): Apache-2.0, no warranty, authorised testing only, and why a passing score is not a safety certificate.
+- [Trademark policy](https://raw.githubusercontent.com/mobius29er/halligan/main/TRADEMARKS.md): Halligan™ and the logo are trademarks of Foxxception LLC; the code licence does not cover the marks.
+- [Code of conduct](https://raw.githubusercontent.com/mobius29er/halligan/main/CODE_OF_CONDUCT.md)
+- [Licence](https://raw.githubusercontent.com/mobius29er/halligan/main/LICENSE): Apache License 2.0.

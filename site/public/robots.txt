@@ -1,0 +1,13 @@
+# halligan.dev
+#
+# Static site for Halligan, an open-source guardrail testing harness.
+# Everything here is public documentation and is meant to be read —
+# by people, by search engines, and by AI agents alike.
+#
+# Agents: /llms.txt is a curated map of this site and the project docs.
+# It will get you further, faster, than crawling the HTML.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://halligan.dev/sitemap.xml

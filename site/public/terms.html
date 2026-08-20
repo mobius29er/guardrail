@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terms — Halligan</title>
+<meta name="description" content="Terms of use for halligan.dev and the Halligan software: Apache-2.0, no warranty, test only what you are authorised to test, and a passing score is not a safety certificate.">
+<link rel="canonical" href="https://halligan.dev/terms">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://halligan.dev/terms">
+<meta property="og:title" content="Terms — Halligan">
+<meta property="og:description" content="Apache-2.0, no warranty, and test only what you are authorised to test.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<style>
+/* Terms page only. */
+:root{--wrap:46rem}
+</style>
+</head>
+<body class="legal">
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/">
+      <img class="mark" src="/assets/brand/halligan-mark-reverse.svg" width="34" height="34" alt="">
+      <span class="word">Halligan</span>
+    </a>
+    <span class="spacer"></span>
+    <a class="navlink" href="/">Home</a>
+    <a class="navlink" href="/start">Getting started</a>
+    <a class="navlink hide-sm" href="/report">Sample report</a>
+    <a class="navlink" href="https://github.com/mobius29er/halligan">GitHub<svg class="ext" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3H3v10h10v-3M10 2h4v4M14 2 7 9"/></svg></a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <h1>Terms of use</h1>
+    <p class="lede">The terms for this website and for the Halligan software.</p>
+    <p class="updated">Effective 20 August 2026 · Foxxception LLC</p>
+  </div>
+</header>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+
+    <div class="tldr">
+      <strong>The short version</strong>
+      <p>
+        The software is Apache-2.0 and free, with no paid tier. Your rights to
+        use, modify and redistribute it come from that licence, and nothing
+        here takes them away. These terms cover the rest: the website, the
+        trademarks, and the two things that actually matter.
+      </p>
+      <p>
+        Those two: <strong>only point Halligan at a system you own or have
+        written permission to test</strong>, and <strong>a passing score is not
+        a safety certificate</strong> — it means the probes we shipped did not
+        break your guardrails, which is not the same as your guardrails being
+        sound.
+      </p>
+    </div>
+
+    <ul class="toc">
+      <li><a href="#accept">1. These terms</a></li>
+      <li><a href="#licence">2. The software licence</a></li>
+      <li><a href="#site">3. The website</a></li>
+      <li><a href="#authorised">4. Authorised testing only</a></li>
+      <li><a href="#yours">5. Your responsibilities</a></li>
+      <li><a href="#notcert">6. Not a certification</a></li>
+      <li><a href="#probes">7. Probe content</a></li>
+      <li><a href="#marks">8. Trademarks</a></li>
+      <li><a href="#contrib">9. Contributions</a></li>
+      <li><a href="#warranty">10. No warranty</a></li>
+      <li><a href="#liability">11. Limitation of liability</a></li>
+      <li><a href="#indemnity">12. Indemnity</a></li>
+      <li><a href="#changes">13. Changes</a></li>
+      <li><a href="#law">14. Governing law</a></li>
+      <li><a href="#contact">15. Contact</a></li>
+    </ul>
+
+    <h2 id="accept">1. These terms</h2>
+    <p>
+      These terms are an agreement between you and <strong>Foxxception
+      LLC</strong> (&ldquo;we&rdquo;, &ldquo;us&rdquo;), a Florida limited
+      liability company. They apply when you use the website at
+      <a href="https://halligan.dev">halligan.dev</a>, and they supplement — but
+      never override — the software licence described in section 2. If you do
+      not accept them, do not use the site.
+    </p>
+
+    <h2 id="licence">2. The software licence</h2>
+    <p>
+      The Halligan software, including its probe suites, is licensed under the
+      <a href="https://github.com/mobius29er/halligan/blob/main/LICENSE">Apache
+      License, Version 2.0</a>. That licence, not this page, governs your use,
+      modification and redistribution of the code.
+    </p>
+    <p>
+      Where anything on this page conflicts with the Apache-2.0 licence as it
+      applies to the software, the licence wins. Nothing here is intended to add
+      a condition to it, and no part of these terms should be read as
+      restricting a right the licence grants you.
+    </p>
+
+    <h2 id="site">3. The website</h2>
+    <p>
+      The site is provided for information. We may change, move or withdraw any
+      part of it at any time, and we do not promise it will be available
+      uninterrupted. Do not attempt to disrupt it, or to access any part of it
+      you have not been given access to.
+    </p>
+    <p>
+      Site content other than the software — the written pages, the sample
+      report, and the Halligan brand assets — remains our copyright, except
+      where a page says otherwise.
+    </p>
+
+    <h2 id="authorised">4. Authorised testing only</h2>
+    <p>
+      Halligan is a red-team tool. It exists to attack guardrails deliberately,
+      and it is effective enough that pointing it in the wrong direction has
+      real consequences. You agree to run it only against:
+    </p>
+    <ul>
+      <li>a system you own or operate; or</li>
+      <li>a system whose owner has given you documented permission to test; or</li>
+      <li>a model endpoint you are authorised to send this traffic to under the
+          provider's own terms of service.</li>
+    </ul>
+    <p>
+      You must not use Halligan to attack, degrade or extract data from a
+      third-party service without that authorisation, to generate content that
+      is unlawful where you are, or to build a product whose purpose is to
+      defeat another party's safety systems in production. Automated
+      adversarial traffic is a violation of most providers' terms unless you
+      have arranged otherwise — that arrangement is yours to make, not ours.
+    </p>
+
+    <h2 id="yours">5. Your responsibilities</h2>
+    <p>
+      You are responsible for your own configuration and for everything that
+      follows from a run. In particular:
+    </p>
+    <ul>
+      <li><strong>Cost.</strong> Runs consume paid API tokens at your provider,
+          and repeat counts multiply them. Halligan ships
+          <code>--estimate</code> so you can price a suite before it executes;
+          any bill you incur is yours.</li>
+      <li><strong>Credentials.</strong> Keys stay in your environment.
+          Protecting them, and rotating them if they leak, is on you.</li>
+      <li><strong>Artifacts.</strong> Reports may contain transcript text from
+          adversarial conversations. Review one before you circulate it.</li>
+      <li><strong>Compliance.</strong> Your use must comply with the terms of
+          every model provider you point at, and with the law that applies to
+          you.</li>
+    </ul>
+
+    <h2 id="notcert">6. Not a certification</h2>
+    <p>
+      A Halligan score describes how a specific model, on a specific day, under
+      a specific configuration, answered the probes in the suite you ran. It is
+      evidence, and it is meant to be useful evidence. It is not a guarantee,
+      an audit, a certification, or a statement that a system is safe, aligned,
+      compliant or fit for any purpose.
+    </p>
+    <p>
+      Nothing produced by Halligan — score, report, or pack result — is legal,
+      medical, theological or professional advice, and it must not be presented
+      to a regulator, customer or user as a warranty of safety by us. A suite
+      that passes has failed to find a problem, which is not the same thing as
+      there being none.
+    </p>
+
+    <h2 id="probes">7. Probe content</h2>
+    <p>
+      The probe suites deliberately contain adversarial material: jailbreak
+      attempts, emotional-coercion framings, and arguments for positions this
+      project rejects. They are test inputs, not endorsements, and they are
+      published so that failures are reproducible.
+    </p>
+    <p>
+      Probes are data and are never executed. The runner does not replay a
+      model's output into another model except as text to be graded. If you
+      redistribute a suite, keep it in a context where that is clear.
+    </p>
+
+    <h2 id="marks">8. Trademarks</h2>
+    <p>
+      Halligan&trade; and the Halligan logo are trademarks of Foxxception LLC.
+      The Apache-2.0 licence covers the code, not the marks. Nominative use —
+      saying truthfully that your project uses or tests with Halligan — is
+      fine; using the name or logo in a way that suggests we endorse, sponsor
+      or maintain your fork is not. The
+      <a href="https://github.com/mobius29er/halligan/blob/main/TRADEMARKS.md">trademark
+      policy</a> sets out the detail, including how to name a fork.
+    </p>
+
+    <h2 id="contrib">9. Contributions</h2>
+    <p>
+      Contributions you submit to the project are licensed under Apache-2.0 in
+      accordance with section 5 of that licence, and you confirm you have the
+      right to submit them. The
+      <a href="https://github.com/mobius29er/halligan/blob/main/CONTRIBUTING.md">contributing
+      guide</a> covers how, and the
+      <a href="https://github.com/mobius29er/halligan/blob/main/CODE_OF_CONDUCT.md">code
+      of conduct</a> applies to project spaces.
+    </p>
+
+    <h2 id="warranty">10. No warranty</h2>
+    <p>
+      The site and the software are provided <strong>&ldquo;as is&rdquo; and
+      &ldquo;as available&rdquo;, without warranty of any kind</strong>, express
+      or implied, including any implied warranty of merchantability, fitness for
+      a particular purpose, accuracy, or non-infringement. This mirrors section
+      7 of the Apache-2.0 licence, which is the operative disclaimer for the
+      software.
+    </p>
+    <p>
+      Model behaviour is not deterministic. A suite that passes today may fail
+      tomorrow against the same model, and Halligan's flake detection exists
+      precisely because that is normal rather than exceptional.
+    </p>
+
+    <h2 id="liability">11. Limitation of liability</h2>
+    <p>
+      To the fullest extent permitted by law, we are not liable for any
+      indirect, incidental, special, consequential or exemplary damages, or for
+      lost profits, lost data, API charges, business interruption, reputational
+      harm, or the behaviour of any model you test — whether or not we were
+      advised such damages were possible.
+    </p>
+    <p>
+      Our total aggregate liability arising out of the site or the software is
+      limited to <strong>one hundred United States dollars (US$100)</strong>.
+      This is free software given away without charge, and the limit reflects
+      that. Nothing here excludes liability that cannot lawfully be excluded,
+      including for fraud or for death or personal injury caused by negligence.
+    </p>
+
+    <h2 id="indemnity">12. Indemnity</h2>
+    <p>
+      You agree to indemnify us against claims, losses and reasonable legal
+      costs arising from your use of Halligan in breach of section 4 — that is,
+      from pointing it at a system you were not authorised to test.
+    </p>
+
+    <h2 id="changes">13. Changes</h2>
+    <p>
+      We may update these terms. The effective date at the top changes when we
+      do, and every revision is visible in the
+      <a href="https://github.com/mobius29er/halligan/commits/main/site/public/terms.html">public
+      commit history</a> of this page. Continuing to use the site after a change
+      means you accept the revised terms; a version of the software you already
+      hold stays licensed under the Apache-2.0 terms it came with.
+    </p>
+
+    <h2 id="law">14. Governing law</h2>
+    <p>
+      These terms are governed by the laws of the <strong>State of
+      Florida</strong>, United States, without regard to its conflict of law
+      rules. The state and federal courts located in Florida have exclusive
+      jurisdiction over any dispute arising from them, and you consent to
+      venue there. If any provision is held unenforceable, the rest stays in
+      force.
+    </p>
+
+    <h2 id="contact">15. Contact</h2>
+    <p class="addr">
+      Legal notices: <a href="mailto:legal@foxxception.com">legal@foxxception.com</a><br>
+      Everything else: <a href="mailto:support@foxxception.com">support@foxxception.com</a><br>
+      Foxxception LLC, Florida, United States
+    </p>
+    <p>
+      See also the <a href="/privacy">privacy policy</a> and the
+      <a href="/security">security policy</a>.
+    </p>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap cols">
+    <div>
+      <strong style="color:var(--fg)">Halligan</strong> — Apache-2.0.<br>
+      Copyright © 2026 <a href="https://foxxception.com">Foxxception LLC</a>.<br>
+      Built by <a href="https://jeremyfoxx.com" rel="me">Jeremy Foxx</a>.<br>
+      Halligan™ and the Halligan logo are trademarks of Foxxception LLC.
+    </div>
+    <div>
+      <a href="/">Home</a> ·
+      <a href="/start">Getting started</a> ·
+      <a href="/about">About</a> ·
+      <a href="/report">Sample report</a> ·
+      <a href="https://github.com/mobius29er/halligan">GitHub</a> ·
+      <a href="https://github.com/sponsors/mobius29er">Sponsor</a> ·
+      <a href="https://ko-fi.com/cruxway">Ko-fi</a> ·
+      <a href="/privacy">Privacy</a> ·
+      <a href="/security">Security</a> ·
+      <a href="https://github.com/mobius29er/halligan/blob/main/NOTICE">Notice</a> ·
+      <a href="https://github.com/mobius29er/halligan/blob/main/TRADEMARKS.md">Trademarks</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security — Halligan</title>
+<meta name="description" content="How to report a vulnerability in Halligan, what is in scope, our safe-harbour commitment, and how the harness handles API credentials.">
+<link rel="canonical" href="https://halligan.dev/security">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://halligan.dev/security">
+<meta property="og:title" content="Security — Halligan">
+<meta property="og:description" content="Report privately, get an acknowledgement in seven days, and test in good faith without fear of a lawyer.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<style>
+/* Security page only. */
+:root{--wrap:46rem}
+</style>
+</head>
+<body class="legal">
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/">
+      <img class="mark" src="/assets/brand/halligan-mark-reverse.svg" width="34" height="34" alt="">
+      <span class="word">Halligan</span>
+    </a>
+    <span class="spacer"></span>
+    <a class="navlink" href="/">Home</a>
+    <a class="navlink" href="/start">Getting started</a>
+    <a class="navlink hide-sm" href="/report">Sample report</a>
+    <a class="navlink" href="https://github.com/mobius29er/halligan">GitHub<svg class="ext" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3H3v10h10v-3M10 2h4v4M14 2 7 9"/></svg></a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <h1>Security</h1>
+    <p class="lede">How to report something, and how this project handles the keys you give it.</p>
+    <p class="updated">Effective 20 August 2026 · Foxxception LLC</p>
+  </div>
+</header>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+
+    <div class="tldr">
+      <strong>Report privately</strong>
+      <p>
+        Use GitHub's
+        <a href="https://github.com/mobius29er/halligan/security/advisories/new">private
+        vulnerability reporting</a> rather than opening a public issue. You will
+        get a human acknowledgement within seven days. If you report in good
+        faith under the terms below, we will not pursue you for it.
+      </p>
+    </div>
+
+    <ul class="toc">
+      <li><a href="#report">1. Reporting</a></li>
+      <li><a href="#include">2. What to include</a></li>
+      <li><a href="#expect">3. What to expect</a></li>
+      <li><a href="#harbour">4. Safe harbour</a></li>
+      <li><a href="#scope">5. Scope</a></li>
+      <li><a href="#creds">6. How credentials are handled</a></li>
+      <li><a href="#leak">7. If you leak a key</a></li>
+      <li><a href="#probes">8. Probe content</a></li>
+      <li><a href="#txt">9. security.txt</a></li>
+    </ul>
+
+    <h2 id="report">1. Reporting</h2>
+    <p>
+      Report security issues <strong>privately</strong>, through
+      <a href="https://github.com/mobius29er/halligan/security/advisories/new">GitHub
+      private vulnerability reporting</a>. That channel is preferred because it
+      keeps the report, the fix and the advisory in one place, and it lets us
+      credit you when it is published.
+    </p>
+    <p>
+      If GitHub is not available to you, write to
+      <a href="mailto:support@foxxception.com">support@foxxception.com</a> with
+      &ldquo;security&rdquo; in the subject line. Please do not open a public
+      issue, and please do not post a working exploit publicly before a fix
+      exists.
+    </p>
+
+    <h2 id="include">2. What to include</h2>
+    <ul>
+      <li>the version — <code>halligan --version</code> — and how you installed it;</li>
+      <li>what an attacker gets out of it, in one sentence;</li>
+      <li>reproduction steps, or a minimal config that triggers it;</li>
+      <li>any log or artifact that shows the behaviour, with your own
+          credentials removed.</li>
+    </ul>
+
+    <h2 id="expect">3. What to expect</h2>
+    <p>
+      We aim to acknowledge a report within <strong>seven days</strong>, to
+      confirm or reject it with reasoning once we have reproduced it, and to
+      keep you updated while a fix is in progress. When it ships we publish a
+      GitHub advisory and credit you by the name you choose, or not at all if
+      you prefer.
+    </p>
+    <p>
+      This is a small project, not a funded programme: there is no bug bounty
+      and we cannot pay for reports. We would rather say that plainly than
+      leave it implied.
+    </p>
+
+    <h2 id="harbour">4. Safe harbour</h2>
+    <p>
+      If you make a good-faith effort to follow this policy, we will treat your
+      research as authorised: we will not bring a claim against you, we will not
+      report you to law enforcement, and if a third party does bring a claim, we
+      will make it known that you were acting within this policy.
+    </p>
+    <p>Good faith means you:</p>
+    <ul>
+      <li>test only against your own installation of Halligan, or against
+          halligan.dev itself — never against another user's systems;</li>
+      <li>stop as soon as you have confirmed a vulnerability, and do not
+          access, modify or exfiltrate data that is not yours;</li>
+      <li>do not degrade the service for anyone else — no denial of service,
+          no spam, no social engineering of maintainers or users;</li>
+      <li>give us reasonable time to fix the issue before disclosing it. We
+          suggest ninety days, and are happy to agree sooner for a low-severity
+          finding.</li>
+    </ul>
+
+    <h2 id="scope">5. Scope</h2>
+    <p>
+      Halligan is a testing harness that runs on your machine, so the realistic
+      failure modes are narrow and specific:
+    </p>
+    <ul>
+      <li><strong>Credential leakage</strong> — a key reaching logs, a run
+          artifact, a report, or a commit.</li>
+      <li><strong>Artifact exposure</strong> — sensitive conversation text
+          escaping the redaction filter, or being written somewhere unexpected.</li>
+      <li><strong>Supply chain</strong> — a compromised dependency, or a
+          tampered release artifact, reaching a user or a CI pipeline.</li>
+      <li><strong>Code execution</strong> — a suite, pack or target file that
+          can execute code when it is only supposed to be parsed.</li>
+      <li><strong>halligan.dev</strong> — the site itself, though it is static
+          files with no server-side logic and no user data.</li>
+    </ul>
+    <p>
+      Out of scope: a model saying something objectionable when you probe it —
+      that is the tool working, and it belongs in a suite rather than a
+      security report. Also out of scope are findings that require an attacker
+      to already control your machine, missing hardening headers with no
+      demonstrated impact, and reports produced by a scanner with no analysis
+      attached. Vulnerabilities in GitHub, PyPI or Cloudflare belong with those
+      vendors.
+    </p>
+
+    <h2 id="creds">6. How credentials are handled</h2>
+    <p>
+      Halligan <strong>never</strong> takes an API key as a command-line
+      argument, and never writes one to disk. Keys are read from the
+      environment only, loaded from a gitignored <code>.env</code> at startup.
+      Every run artifact passes through a redaction filter that masks known key
+      formats — <code>sk-</code>, <code>sk-ant-</code>, <code>AIza</code>,
+      bearer tokens, and generic high-entropy strings — before anything is
+      written or printed.
+    </p>
+    <p>
+      Two independent scanners back that up: gitleaks runs in CI on every push
+      and pull request across the <em>full</em> history and fails the build on a
+      hit, and a pre-commit hook runs detect-secrets and gitleaks locally so a
+      leak is caught before it reaches the remote. The
+      <a href="https://github.com/mobius29er/halligan/blob/main/SECURITY.md">repository
+      security policy</a> is canonical here and carries the setup commands.
+    </p>
+
+    <h2 id="leak">7. If you leak a key</h2>
+    <p>
+      Order matters — <strong>revoke first, scrub second</strong>. A key pushed
+      to a public repository should be assumed compromised the moment it lands;
+      rewriting history does not unpublish it. Rotate at the provider, then
+      remove it from history with git-filter-repo, then verify with a fresh
+      gitleaks scan. The
+      <a href="https://github.com/mobius29er/halligan/blob/main/SECURITY.md#if-you-leak-a-key">repository
+      policy</a> has the exact commands and the provider console links.
+    </p>
+
+    <h2 id="probes">8. Probe content</h2>
+    <p>
+      The suites deliberately contain adversarial prompts — jailbreak attempts,
+      emotional-coercion framings, and arguments for positions this project
+      rejects. They are test inputs, not endorsements. Probes are data, never
+      executable content, and the runner never replays a model's output into
+      another model except as text to be graded.
+    </p>
+
+    <h2 id="txt">9. security.txt</h2>
+    <p>
+      Machine-readable contact details are published at
+      <a href="/.well-known/security.txt">/.well-known/security.txt</a>, per
+      <a href="https://www.rfc-editor.org/rfc/rfc9116">RFC&nbsp;9116</a>.
+    </p>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap cols">
+    <div>
+      <strong style="color:var(--fg)">Halligan</strong> — Apache-2.0.<br>
+      Copyright © 2026 <a href="https://foxxception.com">Foxxception LLC</a>.<br>
+      Built by <a href="https://jeremyfoxx.com" rel="me">Jeremy Foxx</a>.<br>
+      Halligan™ and the Halligan logo are trademarks of Foxxception LLC.
+    </div>
+    <div>
+      <a href="/">Home</a> ·
+      <a href="/start">Getting started</a> ·
+      <a href="/about">About</a> ·
+      <a href="/report">Sample report</a> ·
+      <a href="https://github.com/mobius29er/halligan">GitHub</a> ·
+      <a href="https://github.com/sponsors/mobius29er">Sponsor</a> ·
+      <a href="https://ko-fi.com/cruxway">Ko-fi</a> ·
+      <a href="/privacy">Privacy</a> ·
+      <a href="/terms">Terms</a> ·
+      <a href="https://github.com/mobius29er/halligan/blob/main/NOTICE">Notice</a> ·
+      <a href="https://github.com/mobius29er/halligan/blob/main/TRADEMARKS.md">Trademarks</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

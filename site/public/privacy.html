@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy — Halligan</title>
+<meta name="description" content="Halligan sets no cookies, runs no analytics and has no telemetry. What that means, and the one thing we cannot honestly claim to know nothing about.">
+<link rel="canonical" href="https://halligan.dev/privacy">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://halligan.dev/privacy">
+<meta property="og:title" content="Privacy — Halligan">
+<meta property="og:description" content="No cookies, no analytics, no telemetry. Here is exactly what that means.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<style>
+/* Privacy page only. */
+:root{--wrap:46rem}
+</style>
+</head>
+<body class="legal">
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="/">
+      <img class="mark" src="/assets/brand/halligan-mark-reverse.svg" width="34" height="34" alt="">
+      <span class="word">Halligan</span>
+    </a>
+    <span class="spacer"></span>
+    <a class="navlink" href="/">Home</a>
+    <a class="navlink" href="/start">Getting started</a>
+    <a class="navlink hide-sm" href="/report">Sample report</a>
+    <a class="navlink" href="https://github.com/mobius29er/halligan">GitHub<svg class="ext" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3H3v10h10v-3M10 2h4v4M14 2 7 9"/></svg></a>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <h1>Privacy</h1>
+    <p class="lede">What this site and this tool know about you, and what they do not.</p>
+    <p class="updated">Effective 20 August 2026 · Foxxception LLC</p>
+  </div>
+</header>
+
+<hr class="rule">
+
+<section>
+  <div class="wrap">
+
+    <div class="tldr">
+      <strong>The short version</strong>
+      <p>
+        halligan.dev is a handful of static files. It sets no cookies, runs no
+        analytics, loads nothing from a third party, and has no forms, no
+        accounts and no payments. The Halligan command-line tool has no
+        telemetry of any kind — it never calls home, and your API keys and
+        transcripts never touch our infrastructure because there is no
+        infrastructure for them to touch.
+      </p>
+      <p>
+        The one thing we will not claim: our host, Cloudflare, has to process
+        your IP address to serve you a page at all. Section&nbsp;3 says what
+        that means.
+      </p>
+    </div>
+
+    <ul class="toc">
+      <li><a href="#who">1. Who we are</a></li>
+      <li><a href="#site">2. The website</a></li>
+      <li><a href="#hosting">3. Hosting and server logs</a></li>
+      <li><a href="#cli">4. The Halligan tool</a></li>
+      <li><a href="#providers">5. Model providers</a></li>
+      <li><a href="#third">6. Third-party services</a></li>
+      <li><a href="#email">7. If you email us</a></li>
+      <li><a href="#rights">8. Your rights</a></li>
+      <li><a href="#children">9. Children</a></li>
+      <li><a href="#changes">10. Changes</a></li>
+      <li><a href="#contact">11. Contact</a></li>
+    </ul>
+
+    <h2 id="who">1. Who we are</h2>
+    <p>
+      Halligan is published by <strong>Foxxception LLC</strong> (&ldquo;we&rdquo;,
+      &ldquo;us&rdquo;), a Florida limited liability company, which is the data
+      controller for this website. This policy covers the website at
+      <a href="https://halligan.dev">halligan.dev</a> and the Halligan software
+      distributed on PyPI and GitHub.
+    </p>
+
+    <h2 id="site">2. The website</h2>
+    <p>
+      Every page on this site is a static file. Nothing on it profiles you, and
+      that was a design decision rather than something we can quietly reverse
+      without the commit showing. Specifically, this site does
+      <strong>not</strong>:
+    </p>
+    <ul class="none">
+      <li>set cookies, or write to local storage or session storage;</li>
+      <li>run analytics, tag managers, session recording or advertising pixels;</li>
+      <li>load fonts, scripts, stylesheets or images from any other domain — the
+          typefaces are the ones already on your device;</li>
+      <li>contain a single form field, login, cart or payment flow;</li>
+      <li>fingerprint your browser, or build a profile of you across visits.</li>
+    </ul>
+    <p>
+      The only JavaScript we ship is a copy-to-clipboard button on the landing
+      page, which writes an install command to your clipboard and sends nothing
+      anywhere.
+    </p>
+
+    <h2 id="hosting">3. Hosting and server logs</h2>
+    <p>
+      The site is served by <strong>Cloudflare</strong>, which acts as our
+      hosting provider and processor. To deliver a page at all, and to protect
+      the site from attack and abuse, Cloudflare processes standard request
+      metadata: your IP address, the page requested, your user agent string,
+      approximate location derived from that IP, and the time of the request.
+    </p>
+    <p>
+      We do not use that data to identify you, we do not combine it with
+      anything else, and we do not sell or share it. Our lawful basis, where
+      the UK or EU GDPR applies, is our legitimate interest in keeping the site
+      available and secure. Cloudflare's own handling is governed by its
+      <a href="https://www.cloudflare.com/privacypolicy/">privacy policy</a>,
+      and it retains these logs on its own short schedule.
+    </p>
+
+    <h2 id="cli">4. The Halligan tool</h2>
+    <p>
+      Halligan is a command-line program that runs entirely on your own machine
+      or in your own CI. It contains no telemetry, no usage reporting, no crash
+      reporting, no update check and no licence check. We receive nothing when
+      you install it, run it, or fail a build with it — we have no way of
+      knowing you use it at all unless you tell us.
+    </p>
+    <p>
+      Your API keys are read from the environment only, are never accepted as a
+      command-line argument, and are never written to disk by Halligan. Run
+      artifacts and HTML reports are written to the path you choose, on your own
+      disk, and pass through a redaction filter that masks known credential
+      formats first.
+    </p>
+    <p>
+      A report can still contain the conversation text of a run, which is by
+      design — you cannot review a guardrail failure you cannot read. That text
+      is adversarial by nature and may be sensitive. Reports are yours to keep
+      or destroy; read one before you share it. The
+      <a href="/security">security page</a> covers credential handling in
+      detail.
+    </p>
+
+    <h2 id="providers">5. Model providers</h2>
+    <p>
+      When you point Halligan at a model, it sends your probe prompts directly
+      from your machine to whichever endpoint you configured — Anthropic,
+      OpenAI, Google, a local Ollama or LM Studio instance, or your own HTTP
+      target. That traffic goes to that provider, not through us.
+    </p>
+    <p>
+      What the provider then does with those prompts is between you and them,
+      under their terms and their privacy policy, and it is worth reading before
+      you run a suite that carries your own production system prompt. A model
+      running locally sends nothing off your machine at all.
+    </p>
+
+    <h2 id="third">6. Third-party services</h2>
+    <p>
+      This site links out to GitHub, PyPI, GitHub Sponsors and Ko-fi. We embed
+      nothing from them, so they learn nothing about you until you actually
+      follow a link — at which point you are on their site under their policy.
+      Installing Halligan from PyPI, or cloning it from GitHub, is a request to
+      those services and is visible to them, not to us.
+    </p>
+
+    <h2 id="email">7. If you email us</h2>
+    <p>
+      If you write to us, we hold your message and your address for as long as
+      it takes to deal with it and to keep a record of the correspondence. We
+      use it to reply, and for nothing else — no mailing list, no marketing, no
+      sharing.
+    </p>
+
+    <h2 id="rights">8. Your rights</h2>
+    <p>
+      Depending on where you live, you may have rights to access, correct,
+      delete, export or object to the processing of your personal data,
+      including under the GDPR and the Florida Digital Bill of Rights.
+    </p>
+    <p>
+      We will honour any such request we are able to honour. In practice we hold
+      almost nothing: apart from email you have sent us, the only data that
+      exists is transient hosting metadata that is not tied to your identity and
+      that we cannot search for &ldquo;you&rdquo; within. We have never sold or
+      shared personal information, and we do not process it for targeted
+      advertising or profiling. To make a request — or to complain to a
+      supervisory authority, if we have not resolved it — start at the contact
+      address below.
+    </p>
+
+    <h2 id="children">9. Children</h2>
+    <p>
+      Halligan is a developer tool and is not directed at children. We do not
+      knowingly collect personal information from anyone under 13.
+    </p>
+
+    <h2 id="changes">10. Changes</h2>
+    <p>
+      If this policy changes, the effective date at the top changes with it, and
+      the edit is visible in the
+      <a href="https://github.com/mobius29er/halligan/commits/main/site/public/privacy.html">public
+      commit history</a> of this page — including what the previous wording was.
+      Material changes will be called out in the project release notes.
+    </p>
+
+    <h2 id="contact">11. Contact</h2>
+    <p>Privacy questions and data requests:</p>
+    <p class="addr">
+      <a href="mailto:support@foxxception.com">support@foxxception.com</a><br>
+      Legal notices: <a href="mailto:legal@foxxception.com">legal@foxxception.com</a><br>
+      Foxxception LLC, Florida, United States
+    </p>
+    <p>
+      Found a vulnerability instead? Please use
+      <a href="/security">private disclosure</a> rather than email.
+    </p>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap cols">
+    <div>
+      <strong style="color:var(--fg)">Halligan</strong> — Apache-2.0.<br>
+      Copyright © 2026 <a href="https://foxxception.com">Foxxception LLC</a>.<br>
+      Built by <a href="https://jeremyfoxx.com" rel="me">Jeremy Foxx</a>.<br>
+      Halligan™ and the Halligan logo are trademarks of Foxxception LLC.
+    </div>
+    <div>
+      <a href="/">Home</a> ·
+      <a href="/start">Getting started</a> ·
+      <a href="/about">About</a> ·
+      <a href="/report">Sample report</a> ·
+      <a href="https://github.com/mobius29er/halligan">GitHub</a> ·
+      <a href="https://github.com/sponsors/mobius29er">Sponsor</a> ·
+      <a href="https://ko-fi.com/cruxway">Ko-fi</a> ·
+      <a href="/terms">Terms</a> ·
+      <a href="/security">Security</a> ·
+      <a href="https://github.com/mobius29er/halligan/blob/main/NOTICE">Notice</a> ·
+      <a href="https://github.com/mobius29er/halligan/blob/main/TRADEMARKS.md">Trademarks</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
